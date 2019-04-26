@@ -49,7 +49,6 @@
 #reddit_comments > #title > .tagline {
   font-size: 1.25em;
   color: #888 !important;
-  margin-left: 15px;
 }
 
 #reddit_comments > #top_bar {
@@ -74,6 +73,7 @@
 .tagline > a.author {
   text-decoration: none;
   padding-right: 0px;
+  margin-right: 5px;
 }
 
 .tagline > a.author:hover {
@@ -157,6 +157,10 @@ a.author.submitter {
 
 a.author.moderator {
   background-color: #4FC761;
+}
+
+a.awarding-link {
+  text-decoration: none;
 }
 
 span.deepthread {
@@ -272,6 +276,10 @@ span.deepthread {
 
 /* Start dark mode */
 
+html[dark] #loading_roy {
+  color: var(--yt-primary-text-color) !important;
+}
+
 html[dark] #reddit_comments #comments {
   color: var(--yt-primary-text-color) !important;
 }
@@ -354,4 +362,29 @@ html[dark] #reddit_comments .md pre {
   position: relative;
   top: -2px;
   color: #CC0000;
+}
+
+.awarding-icon {
+    max-width: 12px;
+    max-height: 12px;
+    vertical-align: -2px;
+    padding-right: 0px;
+}
+
+.awardings-bar {
+  margin-left: 2px;
+}
+
+#comments .awardings-bar {
+  margin-left: 10px;
+}
+
+.awarding-link {
+  margin-right: 4px;
+  padding: 0px;
+}
+
+.awarding-icon-container {
+  margin-right: 2px;
+  padding: 0px;
 }
