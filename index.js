@@ -37,6 +37,8 @@ function get_threads(v, callback) {
   const requests = [
     'https://www.youtube.com/watch?v=',
     'http://www.youtube.com/watch?v=',
+    'https://m.youtube.com/watch?v=',
+    'http://m.youtube.com/watch?v=',
     'https://youtu.be/',
     'http://youtu.be/',
   ].map(url => `${baseUrl}${url}${v}`);
@@ -240,7 +242,7 @@ function morechildren(e, t, n, i, s, o) {
     });
 
     // Fix content for display by removing unwanted elements and changing the domain of the links from YouTube to Reddit:
-    const removables = eroot.querySelectorAll(".flat-list.buttons, .likes, .dislikes, .numchildren, .parent, .midcol");
+    const removables = eroot.querySelectorAll(".flat-list.buttons, .likes, .dislikes, .numchildren, .parent, .midcol, .userattrs");
     Array.prototype.forEach.call(removables, e => e.remove());
     const links = eroot.querySelectorAll("a:not(.author)");
     Array.prototype.forEach.call(links, function(a) {
