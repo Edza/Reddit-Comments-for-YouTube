@@ -43,6 +43,10 @@ function get_threads(v, callback) {
     'http://youtu.be/',
   ].map(url => `${baseUrl}${url}${v}`);
 
+  requests.push(`https://www.reddit.com/search.json?limit=100&q=url:${v}&feature`)
+  requests.push(`https://www.reddit.com/search.json?limit=100&q=url:${v}&t`)
+  requests.push(`https://www.reddit.com/search.json?limit=100&q=url:${v}&ab_channel`)
+
   $.when(...requests.map(url => $.ajax({url: url}))).then(function(...args) {
     const threads = [];
     args.forEach(r => r[0].data.children.forEach(t => threads.push(t)));
