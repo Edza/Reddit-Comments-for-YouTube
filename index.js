@@ -47,15 +47,13 @@ function get_threads(v, callback) {
   requests.push(`https://www.reddit.com/search.json?limit=100&q=url:${v}&t`)
   requests.push(`https://www.reddit.com/search.json?limit=100&q=url:${v}&ab_channel`)
 
-  $.when(...requests.map(url => $.ajax({url: url}))).then(function(...args) {
-    const threads = [];
-    args.forEach(r => r[0].data.children.forEach(t => threads.push(t)));
-    callback(threads);
-  }).fail(display_error_message);
+  chrome.runtime.sendMessage({id: "getThreads", urls: requests}, function(response) {
+    setup_threads(response.response)
+  })
 }
 
 function setup_threads(threads) {
-  const filtered = threads.filter(t => !t.data.promoted);
+  const filtered = threads.filter(t => !t.data.promoted && !t.data.over_18);
 
   // If there is at least 1 thread:
   if (filtered.length) {
@@ -147,7 +145,7 @@ function clean_reddit_content($content) {
 }
 
 function setup_comments(permalink, $thread_select, time, page) {
-  chrome.runtime.sendMessage({permalink: permalink}, function(response) {
+  chrome.runtime.sendMessage({id: "setupComments", permalink: permalink}, function(response) {
     if (response.response != null) {
       var $page = $(response.response);
       // Make thread title link go to actual thread:
@@ -265,7 +263,7 @@ function append_extension($thread_select, $header, $comments, time) {
   // If extension not already appended, append it:
   if (!$("#reddit_comments").length) {
     $("#loading_roy").remove();
-    $("#ticket-shelf").after("<div id='reddit_comments'></div>");
+    $("#comments").before("<div id='reddit_comments'></div>");
     $("#reddit_comments").append("<div id='top_bar'></div>");
     $("#reddit_comments").append("<div id='nav'></div>");
     $("#reddit_comments").append("<div id='title'></div>");
@@ -359,7 +357,7 @@ window.addEventListener("scroll", function(e) {
     } else {
       if (!$("#loading_roy").length) {
         // If extension not loaded yet, and loading text hasn't already been added, add it
-        $("#ticket-shelf").before("<h2 id='loading_roy'>Loading Reddit Comments...</h2>");
+        $("#comments").before("<h2 id='loading_roy'>Loading Reddit Comments...</h2>");
       }
     }
     load_extension();

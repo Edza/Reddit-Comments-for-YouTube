@@ -388,3 +388,7 @@ html[dark] #reddit_comments .md pre {
   margin-right: 2px;
   padding: 0px;
 }
+
+#loading_roy {
+  padding-top: 10px;
+}
