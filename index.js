@@ -134,7 +134,7 @@ function load_extension() {
 function clean_reddit_content($content) {
   // Reddit threads have a lot of HTML content that, for this simplified extension,
   // are unnecessary. The following is the list of all things that aren't needed.
-  const removables = `script, .cloneable, .panestack-title, .menuarea,
+  const removables = `script, head, .cloneable, .panestack-title, .menuarea,
                       .gold-wrap, .numchildren, .flat-list,
                       .domain, .flair, .linkflairlabel, .reportform,
                       .expando-button, .score.likes, .score.dislikes,
