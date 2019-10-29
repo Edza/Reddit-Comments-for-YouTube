@@ -113,7 +113,7 @@ function setup_threads(threads) {
     setup_comments(sorted_threads[0].data.permalink, $thread_select, starterTime);
   } else {
     append_extension(false, "<h3 id='nothread'>No Threads Found</h3>", "");
-    $("#reddit_comments > #nav").attr("display", "none");
+    $("#reddit_comments > #nav").remove();
   }
 }
 
@@ -126,7 +126,7 @@ function load_extension() {
   const video = youtube_url.searchParams.get("v");
 
   // Only load extension if v exists, which it won't on pages like the home page or settings
-  if (video) {
+  if (window.location.href.match(/v=/)) {
     get_threads(video, setup_threads);
   }
 }
@@ -345,15 +345,13 @@ function append_extension($thread_select, $header, $comments, time) {
 // different, and if so, then reload the extension. This will always work because users
 // always have to scroll to get to the comments.
 window.addEventListener("scroll", function(e) {
-  if (window.location.href !== url) {
+  if (window.location.href !== url && window.location.href.match(/v=/)) {
     url = window.location.href;
     // Test the root element of the extension, #reddit_comments, to see if extension has already been appended
     if ($("#reddit_comments").length) {
       // If so, empty out its contents so we can insert new content
-      $("#reddit_comments > #nav").empty();
-      $("#reddit_comments > #title").empty();
-      $("#reddit_comments > #comments").empty();
-      $("#reddit_comments > #top_bar > h2:last-child").empty();
+      $("#reddit_comments").remove();
+	  $("#comments").before("<h2 id='loading_roy'>Loading Reddit Comments...</h2>");
     } else {
       if (!$("#loading_roy").length) {
         // If extension not loaded yet, and loading text hasn't already been added, add it

@@ -389,5 +389,8 @@ html[dark] #reddit_comments .md pre {
 }
 
 #loading_roy {
-  padding-top: 10px;
+  margin: 20px 0px;
+  padding-bottom: 20px;
+  width: var(--flex640-mode-player-width);
+  border-bottom: 1px solid var(--yt-border-color);
 }
