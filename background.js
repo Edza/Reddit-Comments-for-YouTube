@@ -1,9 +1,7 @@
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
     if (request.id == "setupComments") {
-        var page = $.ajax({url: "https://old.reddit.com" + request.permalink, async: false,    xhrFields: {
-          withCredentials: true
-       }});
+        var page = $.ajax({url: "https://old.reddit.com" + request.permalink, async: false});
         sendResponse({response: page.responseText.replace(/<\s*head[^>]*>.*?<\s*\/\s*head>/g, '')});
     } else if (request.id == "getThreads") {
       var threads = $.Deferred();
