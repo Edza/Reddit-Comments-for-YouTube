@@ -119,8 +119,6 @@ function setup_threads(threads) {
       $("#reddit_comments > #nav").remove();
     }
   });
-
-  // If there is at least 1 thread:
 }
 
 // URL variable keeps track of current URL so that if it changes we'll be able to tell
