@@ -33,7 +33,7 @@ function sort_threads(threads) {
 }
 
 function get_threads(v, callback) {
-  const baseUrl = 'https://www.reddit.com/api/info.json?limit=100&url=';
+  const baseUrl = 'https://old.reddit.com/api/info.json?limit=100&url=';
   const requests = [
     'https://www.youtube.com/watch?v=',
     'http://www.youtube.com/watch?v=',
@@ -43,13 +43,13 @@ function get_threads(v, callback) {
     'http://youtu.be/',
   ].map(url => `${baseUrl}${url}${v}`);
 
-  requests.push(`https://www.reddit.com/search.json?limit=100&q=url:${v}&feature`)
-  requests.push(`https://www.reddit.com/search.json?limit=100&q=url:${v}&t`)
-  requests.push(`https://www.reddit.com/search.json?limit=100&q=url:${v}&ab_channel`)
+  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}&feature+(site:youtu.be+OR+site:youtube.com)`)
+  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}&t+(site:youtu.be+OR+site:youtube.com)`)
+  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}&ab_channel+(site:youtu.be+OR+site:youtube.com)`)
 
   chrome.runtime.sendMessage({id: "getThreads", urls: requests}, function(response) {
     setup_threads(response.response)
-  })
+  });
 }
 
 function setup_threads(threads) {
@@ -189,18 +189,7 @@ function togglecomment(e) {
   e.innerHTML = (r?"[–]":"[+]")
 }
 
-function morechildren(e, t, n, i, s, o) {
-  function httpGetAsync(theUrl, callback) {
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function() {
-      if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-        callback(xmlHttp.responseText);
-      }
-    }
-    xmlHttp.open("GET", theUrl, true); // true for asynchronous
-    xmlHttp.send(null);
-  }
-
+function morechildren(event) {
   function decodeHTMLEntities(text) {
     var entities = [
       ['amp', '&'],
@@ -222,12 +211,12 @@ function morechildren(e, t, n, i, s, o) {
     return text;
   }
 
-  const u = e.id.slice(5, 100);
-  e.style.color = "red";
-  const morechildren = e.parentElement.parentElement.parentElement;
-
-  httpGetAsync(`https://cors-anywhere.herokuapp.com/https://www.reddit.com/api/morechildren?link_id=${t}&sort=${n}&children=${i}&depth=${s}&id=${u}&limit_children=${o}`, function(response) {
-    const children = JSON.parse(response).jquery[10][3][0];
+  const morechildren = event.data.element.parentElement.parentElement.parentElement;
+  event.data.element.style.color = "red";
+  const u = event.data.element.id.slice(5, 100);
+  var url = "https://old.reddit.com/api/morechildren?link_id=" + event.data.linkId + "&sort=" + event.data.sort + "&children=" + event.data.children + "&id=" + u + "&limit_children=" + event.data.limitChildren;
+  chrome.runtime.sendMessage({id: "moreChildren", url: url}, function(response) {
+    const children = JSON.parse(response.response).jquery[10][3][0];
     const eroot = morechildren.parentElement;
     morechildren.remove();
     const parser = new DOMParser();
@@ -257,6 +246,7 @@ function morechildren(e, t, n, i, s, o) {
       }
     });
   });
+  
 }
 
 function append_extension($thread_select, $header, $comments, time) {
@@ -271,7 +261,8 @@ function append_extension($thread_select, $header, $comments, time) {
     const expander = `<h2><a id="expand" href="javascript:void(0)" onclick="return toggle_expand(this)">[-]</a> Reddit Comments</h2>`;
     $("#reddit_comments > #top_bar").append(expander + "<h2></h2>");
     // Append a short script to the page that so that clicks can be handled:
-    $("#reddit_comments").append(`<script>${click_thing.toString() + toggle_expand.toString() + morechildren.toString() + togglecomment.toString()}</script>`);
+    $("#reddit_comments").append(`<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script> `)
+    $("#reddit_comments").append(`<script>${click_thing.toString() + toggle_expand.toString() + togglecomment.toString()}</script>`);
   }
 
   // If passed a new thread dropdown, replace the old one
@@ -325,6 +316,18 @@ function append_extension($thread_select, $header, $comments, time) {
 
   $("#reddit_comments > #comments, #reddit_comments > #title").find("a.author").each(function() {
     $(this).attr("href", $(this).attr("href").replace("old.reddit.com", "www.reddit.com"));
+  });
+
+  $("#reddit_comments .morechildren").find("a").each(function() {
+    $(this).attr("tesing", $(this).attr("onclick"));
+    var clickArgs = $(this).attr("onclick");
+    $(this).removeAttr("onclick");
+    clickArgs = clickArgs.substring('return morechildren('.length, clickArgs.length - 1);
+    clickArgs = clickArgs.replace(/\'/g, "");
+    clickArgs = clickArgs.split(", ");
+    var e = document.getElementById($(this).attr("id"));
+    var data = {element: e, linkId: clickArgs[1], sort: clickArgs[2], children: clickArgs[3], limitChildren: clickArgs[4]};
+    $(this).click(data, morechildren);
   });
 
   if ($("#reddit_comments > #nav > select").length) {
