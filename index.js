@@ -53,68 +53,74 @@ function get_threads(v, callback) {
 }
 
 function setup_threads(threads) {
-  const filtered = threads.filter(t => !t.data.promoted && !t.data.over_18);
+  var filtered = threads.filter(t => !t.data.promoted);
+  chrome.runtime.sendMessage({id: "checkNSFW"}, function(response) {
+    if (response.response.match(/<title>reddit\.com: over 18\?<\/title>/)) {
+      console.log("poop");
+      filtered = filtered.filter(t => !t.data.over_18);
+    }
+    if (filtered.length) {
+      let sorted_threads = sort_threads(filtered);
+  
+      // Filter duplicates:
+      var unique_threads = [];
+      for(let i = 0; i < sorted_threads.length; i++) {
+        if (!isDupe(sorted_threads[i], unique_threads)) {
+          unique_threads.push(sorted_threads[i]);
+        }
+      }
+  
+      sorted_threads = unique_threads;
+  
+      let $thread_select = $("<select id='thread_select'></select>");
+      let starterTime = "";
+  
+      sorted_threads.forEach(function(thread, i) {
+        const t = thread.data;
+        const subreddit = "r/" + t.subreddit;
+        // &#8679; is an upvote symbol, &#128172; is a comment symbol
+        const forward = `${subreddit}, ${t.score}&#8679;, ${t.num_comments}&#128172;`;
+        // Add in a dynamic number of spaces so that all the video titles line up
+        const spaces = "&nbsp".repeat(52 - forward.length);
+        // Chop off titles that are too long to fit on screen:
+        const sliced_title = t.title.length < 65 ? t.title : t.title.slice(0, 60) + "...";
+  
+        let time = t.url.match(/(\#|\?|\&)t\=\d+(m\d+s)?/);
+        if (time) {
+          time = time[0].slice(3);
+          if (!isNaN(time)) {
+            time = `${parseInt(parseInt(time) / 60)}m${parseInt(time) % 60}s`;
+          }
+        } else {
+          time = "";
+        }
+  
+        if (i === 0) {
+          starterTime = time;
+        }
+  
+        const $opt = `<option
+          value="${t.permalink}"
+          title="${t.title.replace(/\"/g,'&quot;')}"
+          time="${time}"
+          >${forward}${spaces} ${sliced_title}</option>`;
+  
+        $thread_select.append($opt);
+      });
+  
+      $thread_select.on('change', function(event) {
+        $("#reddit_comments > #comments").empty();
+        $("#reddit_comments > #title").empty().html("<h1>Loading Thread...</h1>");
+        setup_comments(event.target.value, null, $($("option:selected", this)[0]).attr("time"));
+      });
+      setup_comments(sorted_threads[0].data.permalink, $thread_select, starterTime);
+    } else {
+      append_extension(false, "<h3 id='nothread'>No Threads Found</h3>", "");
+      $("#reddit_comments > #nav").remove();
+    }
+  });
 
   // If there is at least 1 thread:
-  if (filtered.length) {
-    let sorted_threads = sort_threads(filtered);
-
-    // Filter duplicates:
-    var unique_threads = [];
-    for(let i = 0; i < sorted_threads.length; i++) {
-      if (!isDupe(sorted_threads[i], unique_threads)) {
-        unique_threads.push(sorted_threads[i]);
-      }
-    }
-
-    sorted_threads = unique_threads;
-
-    let $thread_select = $("<select id='thread_select'></select>");
-    let starterTime = "";
-
-    sorted_threads.forEach(function(thread, i) {
-      const t = thread.data;
-      const subreddit = "r/" + t.subreddit;
-      // &#8679; is an upvote symbol, &#128172; is a comment symbol
-      const forward = `${subreddit}, ${t.score}&#8679;, ${t.num_comments}&#128172;`;
-      // Add in a dynamic number of spaces so that all the video titles line up
-      const spaces = "&nbsp".repeat(52 - forward.length);
-      // Chop off titles that are too long to fit on screen:
-      const sliced_title = t.title.length < 65 ? t.title : t.title.slice(0, 60) + "...";
-
-      let time = t.url.match(/(\#|\?|\&)t\=\d+(m\d+s)?/);
-      if (time) {
-        time = time[0].slice(3);
-        if (!isNaN(time)) {
-          time = `${parseInt(parseInt(time) / 60)}m${parseInt(time) % 60}s`;
-        }
-      } else {
-        time = "";
-      }
-
-      if (i === 0) {
-        starterTime = time;
-      }
-
-      const $opt = `<option
-        value="${t.permalink}"
-        title="${t.title.replace(/\"/g,'&quot;')}"
-        time="${time}"
-        >${forward}${spaces} ${sliced_title}</option>`;
-
-      $thread_select.append($opt);
-    });
-
-    $thread_select.on('change', function(event) {
-      $("#reddit_comments > #comments").empty();
-      $("#reddit_comments > #title").empty().html("<h1>Loading Thread...</h1>");
-      setup_comments(event.target.value, null, $($("option:selected", this)[0]).attr("time"));
-    });
-    setup_comments(sorted_threads[0].data.permalink, $thread_select, starterTime);
-  } else {
-    append_extension(false, "<h3 id='nothread'>No Threads Found</h3>", "");
-    $("#reddit_comments > #nav").remove();
-  }
 }
 
 // URL variable keeps track of current URL so that if it changes we'll be able to tell
@@ -124,6 +130,8 @@ function load_extension() {
   // The v param of a YouTube URL is the video's unique ID which is needed to get Reddit threads about it
   const youtube_url = new URL(window.location.href);
   const video = youtube_url.searchParams.get("v");
+
+
 
   // Only load extension if v exists, which it won't on pages like the home page or settings
   if (window.location.href.match(/v=/)) {

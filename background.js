@@ -26,6 +26,15 @@ chrome.runtime.onMessage.addListener(
         }
       });
       sendResponse({response: page.responseText});
+    } else if (request.id == "checkNSFW") {
+        var page = $.ajax({
+          url: "https://old.reddit.com/r/announcements/comments/aep20/about_the_little_red_nsfw_that_appears_next_to/",
+          async: false,
+          xhrFields: {
+            withCredentials: true
+          }
+        });
+        sendResponse({response: page.responseText});
     };
     return true;
   }
