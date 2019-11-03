@@ -41,11 +41,12 @@ function get_threads(v, callback) {
     'http://m.youtube.com/watch?v=',
     'https://youtu.be/',
     'http://youtu.be/',
+	'https://invidio.us/'
   ].map(url => `${baseUrl}${url}${v}`);
 
-  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}&feature+(site:youtu.be+OR+site:youtube.com)`)
-  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}&t+(site:youtu.be+OR+site:youtube.com)`)
-  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}&ab_channel+(site:youtu.be+OR+site:youtube.com)`)
+  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}&feature`)
+  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}&t`)
+  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}&ab_channel`)
 
   chrome.runtime.sendMessage({id: "getThreads", urls: requests}, function(response) {
     setup_threads(response.response)
@@ -54,9 +55,9 @@ function get_threads(v, callback) {
 
 function setup_threads(threads) {
   var filtered = threads.filter(t => !t.data.promoted);
+  filtered = filtered.filter(t => (t.data.domain == "youtube.com" || t.data.domain == "youtu.be" || t.data.domain == "m.youtube.com" || t.data.domain == "invidio.us"));
   chrome.runtime.sendMessage({id: "checkNSFW"}, function(response) {
     if (response.response.match(/<title>reddit\.com: over 18\?<\/title>/)) {
-      console.log("poop");
       filtered = filtered.filter(t => !t.data.over_18);
     }
     if (filtered.length) {
