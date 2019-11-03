@@ -2,7 +2,7 @@
   margin: 20px 0px;
   padding-bottom: 20px;
   width: var(--flex640-mode-player-width);
-  border-bottom: 1px solid var(--yt-border-color);
+  border-bottom: 1px solid var(--yt-spec-10-percent-layer);
 }
 
 #reddit_comments > #nav {
@@ -392,5 +392,5 @@ html[dark] #reddit_comments .md pre {
   margin: 20px 0px;
   padding-bottom: 20px;
   width: var(--flex640-mode-player-width);
-  border-bottom: 1px solid var(--yt-border-color);
+  border-bottom: 1px solid var(--yt-spec-10-percent-layer);
 }
