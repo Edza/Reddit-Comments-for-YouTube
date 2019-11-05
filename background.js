@@ -10,10 +10,14 @@ chrome.runtime.onMessage.addListener(
         });
       sendResponse({response: page.responseText.replace(/<\s*head[^>]*>.*?<\s*\/\s*head>/g, '')});
     } else if (request.id == "getThreads") {
-      var threads = $.Deferred();
-      $.when(...request.urls.map(url => $.ajax({url: url}))).then(function(...args) {
+      $.when(...request.urls.map(url => $.ajax({
+        url: url,
+        timeout: 10000
+      }))).then(function(...args) {
         const threads = [];
-        args.forEach(r => r[0].data.children.forEach(t => threads.push(t)));
+        args.forEach(function(r) {
+          if (r[2].status == 200) r[0].data.children.forEach(t => threads.push(t));
+        });
         sendResponse({response: threads})
       });
     } else if (request.id == "moreChildren") {
