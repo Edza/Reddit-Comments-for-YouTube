@@ -313,6 +313,7 @@ function append_extension($thread_select, $header, $comments, time) {
           }
           sort = new_sort;
           var threadList = $('#thread_select option');
+          var oldThread = $thread_select.find(":selected").attr("value");
           threadList.sort(function(a, b) {
             const conda = sort === "subreddit" ? $(a).attr("subreddit").toLowerCase() : sort === "votes" ? parseInt($(b).attr("votes")) : parseInt($(b).attr("comments"));
             const condb = sort === "subreddit" ? $(b).attr("subreddit").toLowerCase() : sort === "votes" ? parseInt($(a).attr("votes")) : parseInt($(a).attr("comments"));
@@ -320,7 +321,10 @@ function append_extension($thread_select, $header, $comments, time) {
             const nameb = $(b).attr("title").toLowerCase();
             return ((conda < condb) ? -1 : ((conda > condb) ? 1 : ((namea < nameb) ? -1 : 1)));
           });
-          $thread_select.html(threadList).prop("selectedIndex", 0).change();
+          $thread_select.html(threadList).prop("selectedIndex", 0);
+          if (oldThread != $thread_select.find(":selected").attr("value")) {
+            $thread_select.change();
+          }
         }
       });
 
