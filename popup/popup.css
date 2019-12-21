@@ -1,0 +1,22 @@
+#inputError, #duplicateError {
+    color: red;
+    display: none;
+}
+
+body {
+    position: relative;
+    vertical-align:middle;
+}
+
+#blacklistInput {
+    flex: 1;
+}
+
+#input {
+    display: flex;
+}
+
+.remove {
+    color: red;
+    cursor: pointer;
+}

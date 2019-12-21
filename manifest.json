@@ -1,8 +1,8 @@
 {
   "manifest_version": 2,
   "name": "Reddit Comments for YouTube",
-  "version": "1.5.2",
-  "permissions": ["*://www.youtube.com/", "https://old.reddit.com/"],
+  "version": "1.5.3",
+  "permissions": ["*://www.youtube.com/", "https://old.reddit.com/", "storage"],
   "content_scripts": [{
     "matches": ["https://www.youtube.com/*"],
     "js": ["jquery-3.3.1.min.js", "index.js"],
@@ -17,5 +17,11 @@
     "16": "16px_icon.png",
     "48": "48px_icon.png",
     "128": "128px_icon.png"
+  },
+  "browser_action": {
+    "default_popup": "popup/popup.html"
+  },
+  "options_ui": {
+    "page": "popup/popup.html"
   }
 }

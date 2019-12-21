@@ -24,7 +24,6 @@ After all the threads are retrieved and sorted by either score, comments, or sub
 Reddit Comments for YouTube is a work in progress. Here's a current list of plans/improvements for the future:
 
 - Add Upvote/Downvote feature
-- Add ability to blacklist certain subreddits
 - Improve load time
 - Better modularize/despaghettify code
 - Timestamp link videos

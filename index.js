@@ -64,8 +64,12 @@ function get_threads(v, callback) {
 }
 
 function setup_threads(threads) {
-  var filtered = threads.filter(t => !t.data.promoted);
-  filtered = filtered.filter(t => (t.data.domain == "youtube.com" || t.data.domain == "youtu.be" || t.data.domain == "m.youtube.com" || t.data.domain == "invidio.us"));
+  var filtered = threads.filter(t => !t.data.promoted).filter(t => (t.data.domain == "youtube.com" || t.data.domain == "youtu.be" || t.data.domain == "m.youtube.com" || t.data.domain == "invidio.us"));
+  chrome.storage.sync.get({subBlacklist: []}, function(result) {
+    console.log(filtered);
+    filtered = filtered.filter(t => !result.subBlacklist.includes(t.data.subreddit.toLowerCase()));
+    console.log("pee");
+  });
   chrome.runtime.sendMessage({id: "checkNSFW"}, function(response) {
     if (response.response.match(/<title>reddit\.com: over 18\?<\/title>/)) {
       filtered = filtered.filter(t => !t.data.over_18);
