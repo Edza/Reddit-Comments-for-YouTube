@@ -114,6 +114,9 @@ function setup_threads(threads) {
           value="${t.permalink}"
           title="${t.title.replace(/\"/g,'&quot;')}"
           time="${time}"
+          subreddit="${t.subreddit}"
+          votes=${t.score}
+          comments=${t.num_comments}
           >${forward}${spaces} ${sliced_title}</option>`;
   
         $thread_select.append($opt);
@@ -263,9 +266,9 @@ function morechildren(data) {
         a.href = "https://www.reddit.com" + href;
       }
     });
-    $("#reddit_comments .morecomments").find("a").each(function() {
-      $(this).attr({clickArgs: $(this).attr("onclick")}).removeAttr("onclick");
-    });
+  $("#reddit_comments .morecomments").find("a").each(function() {
+    $(this).attr({clickArgs: $(this).attr("onclick")}).removeAttr("onclick");
+  });
   });
   
 }
@@ -308,9 +311,16 @@ function append_extension($thread_select, $header, $comments, time) {
           if (localStorage) {
             localStorage.setItem('rifSort', new_sort);
           }
-					sort = new_sort;
-					$("#reddit_comments").remove();
-					load_extension();
+          sort = new_sort;
+          var threadList = $('#thread_select option');
+          threadList.sort(function(a, b) {
+            const conda = sort === "subreddit" ? $(a).attr("subreddit").toLowerCase() : sort === "votes" ? parseInt($(b).attr("votes")) : parseInt($(b).attr("comments"));
+            const condb = sort === "subreddit" ? $(b).attr("subreddit").toLowerCase() : sort === "votes" ? parseInt($(a).attr("votes")) : parseInt($(a).attr("comments"));
+            const namea = $(a).attr("title").toLowerCase();
+            const nameb = $(b).attr("title").toLowerCase();
+            return ((conda < condb) ? -1 : ((conda > condb) ? 1 : ((namea < nameb) ? -1 : 1)));
+          });
+          $thread_select.html(threadList).prop("selectedIndex", 0).change();
         }
       });
 
