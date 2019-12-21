@@ -326,7 +326,6 @@ function append_extension($thread_select, $header, $comments, time) {
   });
 
   $("#reddit_comments .morechildren").find("a").each(function() {
-    $(this).attr("tesing", $(this).attr("onclick"));
     var clickArgs = $(this).attr("onclick");
     $(this).removeAttr("onclick");
     clickArgs = clickArgs.substring('return morechildren('.length, clickArgs.length - 1);
