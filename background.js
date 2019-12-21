@@ -22,6 +22,8 @@ chrome.runtime.onMessage.addListener(
       });
     } else if (request.id == "moreChildren") {
       var page = $.ajax({
+        method: "POST",
+        data: request.data,
         dataType: "json",
         url: request.url,
         async: false,

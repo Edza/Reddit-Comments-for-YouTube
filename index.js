@@ -221,8 +221,9 @@ function morechildren(event) {
   const morechildren = event.data.element.parentElement.parentElement.parentElement;
   event.data.element.style.color = "red";
   const u = event.data.element.id.slice(5, 100);
-  var url = "https://old.reddit.com/api/morechildren?link_id=" + event.data.linkId + "&sort=" + event.data.sort + "&children=" + event.data.children + "&id=" + u + "&limit_children=" + event.data.limitChildren;
-  chrome.runtime.sendMessage({id: "moreChildren", url: url}, function(response) {
+  var url = "https://old.reddit.com/api/morechildren";
+  var data = {"link_id": event.data.linkId, "sort": event.data.sort, "children": event.data.children, "id": u, "limit_children": event.data.limitChildren};
+  chrome.runtime.sendMessage({id: "moreChildren", url: url, data: data}, function(response) {
     const children = JSON.parse(response.response).jquery[10][3][0];
     const eroot = morechildren.parentElement;
     morechildren.remove();
