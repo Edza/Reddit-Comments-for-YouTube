@@ -1,3 +1,13 @@
+$(function moreChildrenListener(){
+  $(document).on("click",".morecomments a",function(){
+    var clickArgs = $(this).attr("clickArgs");
+    clickArgs = clickArgs.substring('return morechildren('.length, clickArgs.length - 1).replace(/\'/g, "").split(", ");
+    var e = document.getElementById($(this).attr("id"));
+    var data = {element: e, linkId: clickArgs[1], sort: clickArgs[2], children: clickArgs[3], limitChildren: clickArgs[4]};
+    morechildren(data);
+  });
+});
+
 function display_error_message() {
   if (!navigator.onLine) {
     append_extension(false, "<h3 id='nothread'>Internet connection error. Please check your connection and reload the page.</h3>", "");
@@ -196,7 +206,7 @@ function togglecomment(e) {
   e.innerHTML = (r?"[–]":"[+]")
 }
 
-function morechildren(event) {
+function morechildren(data) {
   function decodeHTMLEntities(text) {
     var entities = [
       ['amp', '&'],
@@ -218,11 +228,11 @@ function morechildren(event) {
     return text;
   }
 
-  const morechildren = event.data.element.parentElement.parentElement.parentElement;
-  event.data.element.style.color = "red";
-  const u = event.data.element.id.slice(5, 100);
+  const morechildren = data.element.parentElement.parentElement.parentElement;
+  data.element.style.color = "red";
+  const u = data.element.id.slice(5, 100);
   var url = "https://old.reddit.com/api/morechildren";
-  var data = {"link_id": event.data.linkId, "sort": event.data.sort, "children": event.data.children, "id": u, "limit_children": event.data.limitChildren};
+  var data = {"link_id": data.linkId, "sort": data.sort, "children": data.children, "id": u, "limit_children": data.limitChildren};
   chrome.runtime.sendMessage({id: "moreChildren", url: url, data: data}, function(response) {
     const children = JSON.parse(response.response).jquery[10][3][0];
     const eroot = morechildren.parentElement;
@@ -252,6 +262,9 @@ function morechildren(event) {
       } else if (href[0] === "/") {
         a.href = "https://www.reddit.com" + href;
       }
+    });
+    $("#reddit_comments .morecomments").find("a").each(function() {
+      $(this).attr({clickArgs: $(this).attr("onclick")}).removeAttr("onclick");
     });
   });
   
@@ -326,15 +339,8 @@ function append_extension($thread_select, $header, $comments, time) {
     $(this).attr("href", $(this).attr("href").replace("old.reddit.com", "www.reddit.com"));
   });
 
-  $("#reddit_comments .morechildren").find("a").each(function() {
-    var clickArgs = $(this).attr("onclick");
-    $(this).removeAttr("onclick");
-    clickArgs = clickArgs.substring('return morechildren('.length, clickArgs.length - 1);
-    clickArgs = clickArgs.replace(/\'/g, "");
-    clickArgs = clickArgs.split(", ");
-    var e = document.getElementById($(this).attr("id"));
-    var data = {element: e, linkId: clickArgs[1], sort: clickArgs[2], children: clickArgs[3], limitChildren: clickArgs[4]};
-    $(this).click(data, morechildren);
+  $("#reddit_comments .morecomments").find("a").each(function() {
+    $(this).attr({clickArgs: $(this).attr("onclick")}).removeAttr("onclick");
   });
 
   if ($("#reddit_comments > #nav > select").length) {
