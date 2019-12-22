@@ -1,11 +1,14 @@
 #inputError, #duplicateError {
     color: red;
     display: none;
+    word-wrap: normal;
+    max-width: inherit;
 }
 
 body {
     position: relative;
-    vertical-align:middle;
+    vertical-align: middle;
+    font-family: sans-serif;
 }
 
 #blacklistInput {

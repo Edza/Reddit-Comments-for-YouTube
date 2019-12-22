@@ -35,7 +35,7 @@ $(function addToBlacklist() {;
                 } else {
                     subBlacklist.push(sub);
                     chrome.storage.sync.set({subBlacklist: subBlacklist}, function() {
-                        $("#blacklist").append("<p class='subEntry'><span class='remove'>&#10006;</span><span class='name'>" + sub + "</span></p>");
+                        $("#blacklist").append("<p class='subEntry'><span class='remove'>&#10006; </span><span class='name'>" + sub + "</span></p>");
                         $("#blacklistInput").val("");
                     });
                 }
@@ -49,7 +49,7 @@ $(function addToBlacklist() {;
 $(document).ready(function() {
     chrome.storage.sync.get({subBlacklist: []}, function(result) {
         result.subBlacklist.forEach(element => {
-            $("#blacklist").append("<p class='subEntry'><span class='remove'>&#10006;</span><span class='name'>" + element + "</span></p>");
+            $("#blacklist").append("<p class='subEntry'><span class='remove'>&#10006; </span><span class='name'>" + element + "</span></p>");
         });
     });
 })

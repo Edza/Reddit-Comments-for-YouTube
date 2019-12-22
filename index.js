@@ -1,3 +1,5 @@
+var modhash;
+
 $(function moreChildrenListener(){
   $(document).on("click",".morecomments a",function(){
     var clickArgs = $(this).attr("clickArgs");
@@ -5,6 +7,34 @@ $(function moreChildrenListener(){
     var e = document.getElementById($(this).attr("id"));
     var data = {element: e, linkId: clickArgs[1], sort: clickArgs[2], children: clickArgs[3], limitChildren: clickArgs[4]};
     morechildren(data);
+  });
+});
+
+$(function vote(){
+  $(document).on("click",".arrow",function() {
+    $parent = $(this).parent().parent();
+    var direction;
+    if ($(this).hasClass("up")) {
+      direction = 1;
+      $(this).removeClass("up").addClass("upmod");
+      $(this).parent().find(".downmod").removeClass("down").addClass("down");
+      $parent.children(".unvoted").removeClass("unvoted").addClass("likes");
+      $parent.children(".dislikes").removeClass("dislikes").addClass("likes");
+    } else if ($(this).hasClass("down")) {
+      direction = -1;
+      $(this).removeClass("down").addClass("downmod");
+      $(this).parent().find(".upmod").removeClass("upmod").addClass("up");
+      $parent.children(".unvoted").removeClass("unvoted").addClass("dislikes");
+      $parent.children(".likes").removeClass("likes").addClass("dislikes");
+    } else {
+      direction = 0;
+      $(this).parent().find(".downmod").removeClass("downmod").addClass("down");
+      $(this).parent().find(".upmod").removeClass("upmod").addClass("up");
+      $parent.children(".dislikes").removeClass("dislikes").addClass("unvoted");
+      $parent.children(".likes").removeClass("likes").addClass("unvoted");
+    }
+    var data = {dir: direction, id: $parent.attr("data-fullname"), rank: 2, uh: modhash};
+    chrome.runtime.sendMessage({id: "vote", data: data});
   });
 });
 
@@ -51,7 +81,7 @@ function get_threads(v, callback) {
     'http://m.youtube.com/watch?v=',
     'https://youtu.be/',
     'http://youtu.be/',
-	'https://invidio.us/'
+	  'https://invidio.us/'
   ].map(url => `${baseUrl}${url}${v}`);
 
   requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}&feature`)
@@ -161,28 +191,38 @@ function clean_reddit_content($content) {
   const removables = `script, head, .cloneable, .panestack-title, .menuarea,
                       .gold-wrap, .numchildren, .flat-list,
                       .domain, .flair, .linkflairlabel, .reportform,
-                      .expando-button, .score.likes, .score.dislikes,
-                      .userattrs, .parent, .arrow, .commentsignupbar__container,
-                      .promoted`;
+                      .expando-button, .expando,
+                      .userattrs, .parent, .commentsignupbar__container,
+                      .promoted, .thumbnail`;
   $content.find(removables).remove();
   return $content;
 }
 
 function setup_comments(permalink, $thread_select, time, page) {
   chrome.runtime.sendMessage({id: "setupComments", permalink: permalink}, function(response) {
-    if (response.response != null) {
-      var $page = $(response.response);
-      // Make thread title link go to actual thread:
-      $page.find("a.title").attr("href", "https://www.reddit.com" + permalink);
-      $page = clean_reddit_content($page);
+    chrome.runtime.sendMessage({id: "getMe"}, function(meResponse) {
+      modhash = meResponse.response.data.modhash;
 
-      const header_html = $page.find(".top-matter")[0].innerHTML;
-      const comment_html = $page.find(".commentarea")[0].innerHTML;
+      if (response.response != null) {
+        var $page = $(response.response);
+        // Make thread title link go to actual thread:
+        $page.find("a.title").attr("href", "https://www.reddit.com" + permalink);
+        if (modhash == null || $page.find(".archived-infobar", ".locked-infobar").length) {
+          console.log($page.has(".archived-infobar"));
+          $page.find("#siteTable .link").addClass("readOnly");
+          $page.find(".commentarea .sitetable").addClass("readOnly");
+          console.log("poop");
+        }
+        $page = clean_reddit_content($page);
 
-      append_extension($thread_select, header_html, comment_html, time);
-    } else {
-      display_error_message();
-    }
+        const header_html = $page.find("#siteTable .link")[0].outerHTML;
+        const comment_html = $page.find(".commentarea")[0].innerHTML;
+  
+        append_extension($thread_select, header_html, comment_html, time);
+      } else {
+        display_error_message();
+      }
+    })
   });
 }
 
@@ -258,7 +298,7 @@ function morechildren(data) {
     });
 
     // Fix content for display by removing unwanted elements and changing the domain of the links from YouTube to Reddit:
-    const removables = eroot.querySelectorAll(".flat-list.buttons, .likes, .dislikes, .numchildren, .parent, .midcol, .userattrs");
+    const removables = eroot.querySelectorAll(".flat-list.buttons, .numchildren, .parent, .userattrs");
     Array.prototype.forEach.call(removables, e => e.remove());
     const links = eroot.querySelectorAll("a:not(.author)");
     Array.prototype.forEach.call(links, function(a) {
