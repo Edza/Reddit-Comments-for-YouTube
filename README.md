@@ -23,11 +23,9 @@ After all the threads are retrieved and sorted by either score, comments, or sub
 
 Reddit Comments for YouTube is a work in progress. Here's a current list of plans/improvements for the future:
 
-- Add Upvote/Downvote feature
 - Improve load time
 - Better modularize/despaghettify code
 - Timestamp link videos
-- Fix gild icon display
 - Fix thread count display
 
 Feel free to add to this list for feature requests or send in pull requests with your own changes!
