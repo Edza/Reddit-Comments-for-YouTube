@@ -508,7 +508,6 @@ function append_extension($thread_select, $header, $comments, time) {
 // different, and if so, then reload the extension. This will always work because users
 // always have to scroll to get to the comments.
 window.addEventListener("scroll", function(e) {
-  console.log("sneed");
   if (window.location.href !== url && window.location.href.match(/v=/)) {
     url = window.location.href;
     // Test the root element of the extension, #reddit_comments, to see if extension has already been appended
