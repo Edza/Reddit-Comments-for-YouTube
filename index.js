@@ -1,9 +1,18 @@
 var modhash;
+var suspended = false;
+
+$(document).click(function(){$(".drop-choices").hide()});
 
 $(function changeSort(){
   $(document).on("click", ".dropdown.lightdrop", function(event) {
     $(this).siblings(".drop-choices").toggle();
     event.stopPropagation();
+  });
+});
+
+$(function toggleChildComments(){
+  $(document).on("click", ".toggleChildren", function(event) {
+    $(this).closest(".comment").toggleClass("childrenHidden").addClass("childrenManuallyToggled");
   });
 });
 
@@ -22,6 +31,7 @@ $(function moreChildren(){
         htmlDoc.children(".child").append(`<div id="siteTable_${value.data.id}" class="sitetable listing"></div>`);
         eroot.find(`#siteTable_${value.data.parent}`).append(htmlDoc);
       });
+      collapseHelper();
     });
   });
 });
@@ -33,6 +43,7 @@ $(function comment(){
     chrome.runtime.sendMessage({id: "comment", data: data}, function (response) {
       if (response.response.success == true) {
         var htmlDoc = clean_reddit_content($($.parseHTML(decodeHTMLEntities(response.response.jquery[response.response.jquery.length-4][3][0][0].data.content))));
+        $textarea.closest(".comment").removeClass("childrenHidden").addClass("childrenManuallyToggled");
         $textarea.parent().children(".sitetable").prepend(htmlDoc);
         $textarea.find("span.status").text("");
         if ($textarea.hasClass("removable")) {
@@ -43,6 +54,7 @@ $(function comment(){
       } else {
         $textarea.find("span.status").text(response.response.jquery[response.response.jquery.length-3][3][0]);
       }
+      collapseHelper();
     });
   });
 });
@@ -96,7 +108,7 @@ $(function reply() {
 $(function deleteComment() {
   $(document).on("click",".del-button a.yes",function(){
     chrome.runtime.sendMessage({id: "delete", data: {id: $(this).closest(".thing.comment").attr("data-fullname"), uh: modhash}});
-    $(this).closest("form").html("deleted");
+    $(this).closest("form").html("<span style='padding-right: 5px'>deleted</span>");
   });
 })
 
@@ -127,6 +139,15 @@ $(function vote(){
     chrome.runtime.sendMessage({id: "vote", data: data});
   });
 });
+
+function collapseHelper() {
+  $("#reddit_comments .comment").has(".child .sitetable").addClass("hasChild");
+  chrome.storage.sync.get({childrenHiddenDefault: "false"}, function(result) {
+    if (result.childrenHiddenDefault == "true") {
+      $("#reddit_comments .commentarea > .sitetable").children(":not(.childrenManuallyToggled)").addClass("childrenHidden");
+    };
+  });
+}
 
 function display_error_message() {
   if (!navigator.onLine) {
@@ -190,6 +211,9 @@ function setup_threads(threads) {
   });
   chrome.runtime.sendMessage({id: "getMe"}, function(meResponse) {
     modhash = meResponse.response.data.modhash;
+    if (meResponse.response.data.is_suspended) {
+      suspended = meResponse.response.data.is_suspended;
+    }
     if (typeof meResponse.response.data.over_18 == "undefined" || !meResponse.response.data.over_18) {
       filtered = filtered.filter(t => !t.data.over_18);
     }
@@ -278,24 +302,30 @@ function clean_reddit_content($content) {
   // Reddit threads have a lot of HTML content that, for this simplified extension,
   // are unnecessary. The following is the list of all things that aren't needed.
   const removables = `script, head, .panestack-title, .menuarea > div:last-child,
-                      .gold-wrap, .numchildren, #noresults,
+                      .gold-wrap, .numchildren, #noresults, .locked-error,
                       .domain, .flair, .linkflairlabel, .reportform,
                       .expando-button, .expando, .help-toggle, .reddiquette,
                       .userattrs, .parent, .commentsignupbar__container,
                       .promoted, .thumbnail, .crosspost-button, .report-button,
                       .give-gold-button, .hide-button, .buttons .share, .save-button, .embed-comment,
                       .link .flat-list, .comment-visits-box, .sendreplies-button, .remove-button,
-                      form[action="/post/distinguish"], a[data-event-action="parent"]`;
+                      form[action="/post/distinguish"], a[data-event-action="parent"],
+                      li[title^="removed"], .hidden.choice`;
   $content.find(removables).remove();
+  $content.find(".access-required.archived").css("visibility", "hidden");
   $content.find("button").attr("type", "button");
   $content.find(".morecomments a").attr("clickArgs", function() { return $(this).attr("onclick")}).removeAttr("onclick");
   $content.find("a[data-event-action='delete'], .del-button a, .edit-usertext, .usertext-edit button, .dropdown.lightdrop").removeAttr("onclick");
   $content.find("a[href='#']").attr("href", "javascript:void(0)");
   $content.find("a[href='#s'], a[href='/s']").attr("href", "javascript:void(0)").addClass("reddit_spoiler");
   $content.find("a[href^='/']").attr("href", function() {return "https://www.reddit.com" + $(this).attr("href")});
+  $content.find("ul.flat-list.buttons").append("<li><a href='javascript:void(0)' class='toggleChildren'></a></li>");
   $content.find("a.author, a[data-event-action='permalink']").each(function() {
     $(this).attr("href", $(this).attr("href").replace("old.reddit.com", "www.reddit.com"));
   });
+  if (suspended) {
+    $content.find(".access-required, .commentarea > .usertext").remove();
+  }
   return $content;
 }
 
@@ -305,10 +335,6 @@ function setup_comments(permalink, $thread_select, time, sort = "") {
       var $page = $(response.response);
       // Make thread title link go to actual thread:
       $page.find("a.title").attr("href", "https://www.reddit.com" + permalink);
-      if (modhash == null || $page.find(".archived-infobar", ".locked-infobar").length) {
-        $page.find("#siteTable .link").addClass("readOnly");
-        $page.find(".commentarea .sitetable").addClass("readOnly");
-      }
       $page = clean_reddit_content($page);
 
       const header_html = $page.find("#siteTable .link")[0].outerHTML;
@@ -451,12 +477,6 @@ function append_extension($thread_select, $header, $comments, time) {
     $(this).closest(".comment.thing").children(".entry").find(".usertext-edit, .usertext-buttons button").hide();
   });
 
-  
-
-  $("#reddit_comments").click(function() {
-    $("#reddit_comments").find(".drop-choices").hide();
-  });
-
   $("#reddit_comments").find(".drop-choices a.choice").each(function() {
     var sort = $(this).attr("href").match(/(?<=\?sort=)[a-z]*/);
     $(this).attr("sort", sort);
@@ -477,6 +497,8 @@ function append_extension($thread_select, $header, $comments, time) {
   if (time) {
     $("div#title > p.title").append(`<a class="title titleTime" href="${window.location.href + '&t=' + time}">[${time}]</title>`);
   }
+
+  collapseHelper();
 }
 
 // YouTube doesn't reload pages in a normal manner when you click on a new video,

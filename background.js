@@ -3,7 +3,7 @@ chrome.runtime.onMessage.addListener(
     switch(request.id) {
       case "setupComments":
         var page = $.ajax({
-          url: "https://old.reddit.com" + request.permalink + "/?sort=" + request.sort,
+          url: "https://old.reddit.com" + request.permalink + "?sort=" + request.sort,
           async: false,
           xhrFields: {
             withCredentials: true

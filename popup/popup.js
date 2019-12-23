@@ -1,5 +1,22 @@
 var subredditPattern = new RegExp("^[a-zA-Z0-9_]+$");
 
+$(function updateCollapse(){
+    chrome.storage.sync.get({childrenHiddenDefault: "false"}, function(result) {
+        if (result.childrenHiddenDefault == "true") {
+          $("#collapseOption:checkbox").prop('checked', true);
+        };
+      });
+    $('#collapseOption:checkbox').change(
+        function(){
+            if ($(this).is(':checked')) {
+                chrome.storage.sync.set({childrenHiddenDefault: "true"});
+            }
+            else {
+                chrome.storage.sync.set({childrenHiddenDefault: "false"});
+            }
+    });
+})
+
 $(function removeFromBlacklist() {
     $(document).on("click", ".remove", function() {
         $parent = $(this).parent();
