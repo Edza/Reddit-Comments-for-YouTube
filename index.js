@@ -1,5 +1,12 @@
 var modhash;
 
+$(function changeSort(){
+  $(document).on("click", ".dropdown.lightdrop", function(event) {
+    $(this).siblings(".drop-choices").toggle();
+    event.stopPropagation();
+  });
+});
+
 $(function moreChildren(){
   $(document).on("click",".morecomments a",function(){
     var clickArgs = $(this).attr("clickArgs").substring('return morechildren('.length, $(this).attr("clickArgs").length - 1).replace(/\'/g, "").split(", ");
@@ -270,7 +277,7 @@ function load_extension() {
 function clean_reddit_content($content) {
   // Reddit threads have a lot of HTML content that, for this simplified extension,
   // are unnecessary. The following is the list of all things that aren't needed.
-  const removables = `script, head, .panestack-title, .menuarea div:last-child,
+  const removables = `script, head, .panestack-title, .menuarea > div:last-child,
                       .gold-wrap, .numchildren, #noresults,
                       .domain, .flair, .linkflairlabel, .reportform,
                       .expando-button, .expando, .help-toggle, .reddiquette,
@@ -282,7 +289,7 @@ function clean_reddit_content($content) {
   $content.find(removables).remove();
   $content.find("button").attr("type", "button");
   $content.find(".morecomments a").attr("clickArgs", function() { return $(this).attr("onclick")}).removeAttr("onclick");
-  $content.find("a[data-event-action='delete'], .del-button a, .edit-usertext, .usertext-edit button").removeAttr("onclick");
+  $content.find("a[data-event-action='delete'], .del-button a, .edit-usertext, .usertext-edit button, .dropdown.lightdrop").removeAttr("onclick");
   $content.find("a[href='#']").attr("href", "javascript:void(0)");
   $content.find("a[href='#s'], a[href='/s']").attr("href", "javascript:void(0)").addClass("reddit_spoiler");
   $content.find("a[href^='/']").attr("href", function() {return "https://www.reddit.com" + $(this).attr("href")});
@@ -292,8 +299,8 @@ function clean_reddit_content($content) {
   return $content;
 }
 
-function setup_comments(permalink, $thread_select, time, page) {
-  chrome.runtime.sendMessage({id: "setupComments", permalink: permalink}, function(response) {
+function setup_comments(permalink, $thread_select, time, sort = "") {
+  chrome.runtime.sendMessage({id: "setupComments", permalink: permalink, sort: sort}, function(response) {
     if (response.response != null) {
       var $page = $(response.response);
       // Make thread title link go to actual thread:
@@ -375,7 +382,7 @@ function append_extension($thread_select, $header, $comments, time) {
     const expander = `<h2><a id="expand" href="javascript:void(0)" onclick="return toggle_expand(this)">[-]</a> Reddit Comments</h2>`;
     $("#reddit_comments > #top_bar").append(expander + "<h2></h2>");
     // Append a short script to the page that so that clicks can be handled:
-    $("#reddit_comments").append(`<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script> `)
+    $("#reddit_comments").append(`<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script> `);
     $("#reddit_comments").append(`<script>${click_thing.toString() + toggle_expand.toString() + togglecomment.toString()}</script>`);
   }
 
@@ -422,6 +429,8 @@ function append_extension($thread_select, $header, $comments, time) {
     }
   }
 
+
+
   $("#reddit_comments > #title").empty().append($header);
   $("#reddit_comments > #comments").empty().append($comments);
 
@@ -440,6 +449,23 @@ function append_extension($thread_select, $header, $comments, time) {
   $("#reddit_comments").on("click", ".usertext-edit button.cancel", function() {
     $(this).closest(".comment.thing").children(".entry").find(".usertext-body").show();
     $(this).closest(".comment.thing").children(".entry").find(".usertext-edit, .usertext-buttons button").hide();
+  });
+
+  
+
+  $("#reddit_comments").click(function() {
+    $("#reddit_comments").find(".drop-choices").hide();
+  });
+
+  $("#reddit_comments").find(".drop-choices a.choice").each(function() {
+    var sort = $(this).attr("href").match(/(?<=\?sort=)[a-z]*/);
+    $(this).attr("sort", sort);
+    $(this).attr("href", "javascript:void(0)");
+    $(this).click(function() {
+      $("#reddit_comments > #comments").empty();
+        $("#reddit_comments > #title").empty().html("<h1>Loading Thread...</h1>");
+        setup_comments($("#thread_select").find(":selected").attr("value"), null, $($("option:selected", this)[0]).attr("time"), $(this).attr("sort"));
+    })
   });
 
   if ($("#reddit_comments > #nav > select").length) {
