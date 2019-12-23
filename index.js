@@ -478,14 +478,14 @@ function append_extension($thread_select, $header, $comments, time) {
   });
 
   $("#reddit_comments").find(".drop-choices a.choice").each(function() {
-    var sort = $(this).attr("href").match(/(?<=\?sort=)[a-z]*/);
+    var sort = $(this).attr("href").match(/\?sort=[a-z]*/);
     $(this).attr("sort", sort);
     $(this).attr("href", "javascript:void(0)");
     $(this).click(function() {
       $("#reddit_comments > #comments").empty();
-        $("#reddit_comments > #title").empty().html("<h1>Loading Thread...</h1>");
-        setup_comments($("#thread_select").find(":selected").attr("value"), null, $($("option:selected", this)[0]).attr("time"), $(this).attr("sort"));
-    })
+      $("#reddit_comments > #title").empty().html("<h1>Loading Thread...</h1>");
+      setup_comments($("#thread_select").find(":selected").attr("value"), null, $($("option:selected", this)[0]).attr("time"), $(this).attr("sort"));
+    });
   });
 
   if ($("#reddit_comments > #nav > select").length) {
@@ -508,6 +508,7 @@ function append_extension($thread_select, $header, $comments, time) {
 // different, and if so, then reload the extension. This will always work because users
 // always have to scroll to get to the comments.
 window.addEventListener("scroll", function(e) {
+  console.log("sneed");
   if (window.location.href !== url && window.location.href.match(/v=/)) {
     url = window.location.href;
     // Test the root element of the extension, #reddit_comments, to see if extension has already been appended

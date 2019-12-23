@@ -484,6 +484,7 @@ border-bottom: 1px solid var(--yt-spec-10-percent-layer);
   display: inline-block;
   border: none;
   line-height: 1.6em;
+  padding-right: 0px !important;
 }
 
 .flat-list li a {
