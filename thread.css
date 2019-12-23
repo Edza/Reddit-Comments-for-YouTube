@@ -537,7 +537,7 @@ span.status {
 
 .drop-choices {
   position: absolute;
-  left: 81.4531px;
+  margin-left: 68px;
   border: 1px solid gray;
   z-index: 100;
   background-color: white;
