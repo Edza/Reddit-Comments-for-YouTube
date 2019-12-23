@@ -469,3 +469,49 @@ padding-bottom: 20px;
 width: var(--flex640-mode-player-width);
 border-bottom: 1px solid var(--yt-spec-10-percent-layer);
 }
+
+#comments .md {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+
+.flat-list {
+  list-style-type: none;
+}
+
+.flat-list li {
+  display: inline-block;
+  border: none;
+  line-height: 1.6em;
+}
+
+.flat-list li a {
+  color: #888 !important;
+  font-weight: bold;
+  padding-right: 5px;
+  text-decoration: none
+}
+
+#reddit_comments textarea {
+  width: 500px;
+  height: 100px;
+}
+
+.commentarea> .usertext {
+  margin: 0 0 10px 10px;
+  overflow: auto;
+}
+
+.usertext button {
+  margin: 5px 5px 10px 0;
+}
+
+span.status {
+  color: red;
+  font-size: small;
+}
+
+.del-button .error {
+  display: none;
+}
