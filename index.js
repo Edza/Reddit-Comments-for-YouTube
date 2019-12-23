@@ -81,7 +81,7 @@ $(function edit() {
 $(function reply() {
   $(document).on("click",".reply-button a",function(){
     var parentComment = $(this).closest(".thing.comment");
-    parentComment.children(".child").prepend(`
+    parentComment.children(".child:not(:has(> form))").prepend(`
       <form action='#' class='usertext cloneable removable'>
       <input type='hidden' name='thing_id' value='${parentComment.attr("data-fullname")}'>
           <div class='usertext-edit md-container' style='width: 500px;'>
@@ -323,8 +323,9 @@ function clean_reddit_content($content) {
   $content.find("a.author, a[data-event-action='permalink']").each(function() {
     $(this).attr("href", $(this).attr("href").replace("old.reddit.com", "www.reddit.com"));
   });
-  if (suspended) {
-    $content.find(".access-required, .commentarea > .usertext").remove();
+  if (suspended || modhash == null) {
+    $content.find(".commentarea > .usertext, .reply-button").remove();
+    $content.find(".arrow").css("visibility", "hidden");
   }
   return $content;
 }
