@@ -1,14 +1,97 @@
 var modhash;
 
-$(function moreChildrenListener(){
+$(function moreChildren(){
   $(document).on("click",".morecomments a",function(){
-    var clickArgs = $(this).attr("clickArgs");
-    clickArgs = clickArgs.substring('return morechildren('.length, clickArgs.length - 1).replace(/\'/g, "").split(", ");
-    var e = document.getElementById($(this).attr("id"));
-    var data = {element: e, linkId: clickArgs[1], sort: clickArgs[2], children: clickArgs[3], limitChildren: clickArgs[4]};
-    morechildren(data);
+    var clickArgs = $(this).attr("clickArgs").substring('return morechildren('.length, $(this).attr("clickArgs").length - 1).replace(/\'/g, "").split(", ");
+    morechildren = $(this).closest(".morechildren");
+    $(this).css("color", "red");
+    var data = {"link_id": clickArgs[1], "sort": clickArgs[2], "children": clickArgs[3], "id": $(this).attr("id").slice(5, 100), "limit_children": clickArgs[4]};
+    chrome.runtime.sendMessage({id: "moreChildren", data: data}, function(response) {
+      var children = response.response.jquery[10][3][0];
+      var eroot = morechildren.closest(".child, .commentarea");
+      morechildren.remove();
+      $.each(children, function( index, value ) {
+        var htmlDoc = clean_reddit_content($($.parseHTML(decodeHTMLEntities(value.data.content))));
+        htmlDoc.children(".child").append(`<div id="siteTable_${value.data.id}" class="sitetable listing"></div>`);
+        eroot.find(`#siteTable_${value.data.parent}`).append(htmlDoc);
+      });
+    });
   });
 });
+
+$(function comment(){
+  $(document).on("click",".child > form .usertext-buttons .save, .commentarea > form .usertext-buttons .save",function(){
+    $textarea = $(this).closest("form.usertext");
+    var data = {thing_id: $textarea.find("input[name='thing_id']").attr("value"), text: $textarea.find("textarea").val(), uh: modhash}
+    chrome.runtime.sendMessage({id: "comment", data: data}, function (response) {
+      if (response.response.success == true) {
+        var htmlDoc = clean_reddit_content($($.parseHTML(decodeHTMLEntities(response.response.jquery[response.response.jquery.length-4][3][0][0].data.content))));
+        $textarea.parent().children(".sitetable").prepend(htmlDoc);
+        $textarea.find("span.status").text("");
+        if ($textarea.hasClass("removable")) {
+          $textarea.remove();
+        } else {
+          $textarea.find("textarea").val("");
+        }
+      } else {
+        $textarea.find("span.status").text(response.response.jquery[response.response.jquery.length-3][3][0]);
+      }
+    });
+  });
+});
+
+$(function edit() {
+  $(document).on("click",".edit-usertext",function(){
+    var parent = $(this).closest(".thing.comment");
+    parent.children(".entry").find(".usertext-body").hide();
+    parent.children(".entry").find(".usertext-edit, .usertext-buttons button").show();
+    parent.children(".entry").find(".usertext-edit button.save").click(function() {
+      var data = {thing_id: parent.attr("data-fullname"), text: parent.find(".usertext-edit textarea").val(), uh: modhash};
+      chrome.runtime.sendMessage({id: "edit", data: data}, function (response) {
+        if (response.response.success == true) {
+          var htmlDoc = clean_reddit_content($($.parseHTML(decodeHTMLEntities(response.response.jquery[response.response.jquery.length-4][3][0][0].data.content))));
+          parent.children(".entry").replaceWith(htmlDoc.find(".entry"));
+        } else {
+          parent.children(".entry").find("span.status").text(response.response.jquery[response.response.jquery.length-3][3][0]);
+        }
+      });
+    });
+  })
+})
+
+$(function reply() {
+  $(document).on("click",".reply-button a",function(){
+    var parentComment = $(this).closest(".thing.comment");
+    parentComment.children(".child").prepend(`
+      <form action='#' class='usertext cloneable removable'>
+      <input type='hidden' name='thing_id' value='${parentComment.attr("data-fullname")}'>
+          <div class='usertext-edit md-container' style='width: 500px;'>
+              <div class='md'>
+                <textarea class='replybox'></textarea>
+              </div>
+              <div class='bottom-area'>
+                  <div class='usertext-buttons'>
+                      <button type='button' onclick='' class='save'>save</button>
+                      <button type='button' onclick='$(this).closest("form").remove()' class='cancel' style=''>cancel</button>
+                      <span class='status'></span>
+                  </div>
+              </div>
+          </div>
+      </form>
+    `);
+    parentComment.children(".child").find("textarea.replybox").focus();
+    if (!parentComment.children(".child").children(".sitetable").length) {
+      parentComment.children(".child").append(`<div id="siteTable_${parentComment.attr("data-fullname")}" class="sitetable listing">`);
+    }
+  });
+})
+
+$(function deleteComment() {
+  $(document).on("click",".del-button a.yes",function(){
+    chrome.runtime.sendMessage({id: "delete", data: {id: $(this).closest(".thing.comment").attr("data-fullname"), uh: modhash}});
+    $(this).closest("form").html("deleted");
+  });
+})
 
 $(function vote(){
   $(document).on("click",".arrow",function() {
@@ -96,12 +179,11 @@ function get_threads(v, callback) {
 function setup_threads(threads) {
   var filtered = threads.filter(t => !t.data.promoted).filter(t => (t.data.domain == "youtube.com" || t.data.domain == "youtu.be" || t.data.domain == "m.youtube.com" || t.data.domain == "invidio.us"));
   chrome.storage.sync.get({subBlacklist: []}, function(result) {
-    console.log(filtered);
     filtered = filtered.filter(t => !result.subBlacklist.includes(t.data.subreddit.toLowerCase()));
-    console.log("pee");
   });
-  chrome.runtime.sendMessage({id: "checkNSFW"}, function(response) {
-    if (response.response.match(/<title>reddit\.com: over 18\?<\/title>/)) {
+  chrome.runtime.sendMessage({id: "getMe"}, function(meResponse) {
+    modhash = meResponse.response.data.modhash;
+    if (typeof meResponse.response.data.over_18 == "undefined" || !meResponse.response.data.over_18) {
       filtered = filtered.filter(t => !t.data.over_18);
     }
     if (filtered.length) {
@@ -188,41 +270,47 @@ function load_extension() {
 function clean_reddit_content($content) {
   // Reddit threads have a lot of HTML content that, for this simplified extension,
   // are unnecessary. The following is the list of all things that aren't needed.
-  const removables = `script, head, .cloneable, .panestack-title, .menuarea,
-                      .gold-wrap, .numchildren, .flat-list,
+  const removables = `script, head, .panestack-title, .menuarea div:last-child,
+                      .gold-wrap, .numchildren, #noresults,
                       .domain, .flair, .linkflairlabel, .reportform,
-                      .expando-button, .expando,
+                      .expando-button, .expando, .help-toggle, .reddiquette,
                       .userattrs, .parent, .commentsignupbar__container,
-                      .promoted, .thumbnail`;
+                      .promoted, .thumbnail, .crosspost-button, .report-button,
+                      .give-gold-button, .hide-button, .buttons .share, .save-button, .embed-comment,
+                      .link .flat-list, .comment-visits-box, .sendreplies-button, .remove-button,
+                      form[action="/post/distinguish"], a[data-event-action="parent"]`;
   $content.find(removables).remove();
+  $content.find("button").attr("type", "button");
+  $content.find(".morecomments a").attr("clickArgs", function() { return $(this).attr("onclick")}).removeAttr("onclick");
+  $content.find("a[data-event-action='delete'], .del-button a, .edit-usertext, .usertext-edit button").removeAttr("onclick");
+  $content.find("a[href='#']").attr("href", "javascript:void(0)");
+  $content.find("a[href='#s'], a[href='/s']").attr("href", "javascript:void(0)").addClass("reddit_spoiler");
+  $content.find("a[href^='/']").attr("href", function() {return "https://www.reddit.com" + $(this).attr("href")});
+  $content.find("a.author, a[data-event-action='permalink']").each(function() {
+    $(this).attr("href", $(this).attr("href").replace("old.reddit.com", "www.reddit.com"));
+  });
   return $content;
 }
 
 function setup_comments(permalink, $thread_select, time, page) {
   chrome.runtime.sendMessage({id: "setupComments", permalink: permalink}, function(response) {
-    chrome.runtime.sendMessage({id: "getMe"}, function(meResponse) {
-      modhash = meResponse.response.data.modhash;
-
-      if (response.response != null) {
-        var $page = $(response.response);
-        // Make thread title link go to actual thread:
-        $page.find("a.title").attr("href", "https://www.reddit.com" + permalink);
-        if (modhash == null || $page.find(".archived-infobar", ".locked-infobar").length) {
-          console.log($page.has(".archived-infobar"));
-          $page.find("#siteTable .link").addClass("readOnly");
-          $page.find(".commentarea .sitetable").addClass("readOnly");
-          console.log("poop");
-        }
-        $page = clean_reddit_content($page);
-
-        const header_html = $page.find("#siteTable .link")[0].outerHTML;
-        const comment_html = $page.find(".commentarea")[0].innerHTML;
-  
-        append_extension($thread_select, header_html, comment_html, time);
-      } else {
-        display_error_message();
+    if (response.response != null) {
+      var $page = $(response.response);
+      // Make thread title link go to actual thread:
+      $page.find("a.title").attr("href", "https://www.reddit.com" + permalink);
+      if (modhash == null || $page.find(".archived-infobar", ".locked-infobar").length) {
+        $page.find("#siteTable .link").addClass("readOnly");
+        $page.find(".commentarea .sitetable").addClass("readOnly");
       }
-    })
+      $page = clean_reddit_content($page);
+
+      const header_html = $page.find("#siteTable .link")[0].outerHTML;
+      const comment_html = $page.find(".commentarea")[0].outerHTML;
+
+      append_extension($thread_select, header_html, comment_html, time);
+    } else {
+      display_error_message();
+    }
   });
 }
 
@@ -253,69 +341,27 @@ function togglecomment(e) {
   e.innerHTML = (r?"[–]":"[+]")
 }
 
-function morechildren(data) {
-  function decodeHTMLEntities(text) {
-    var entities = [
-      ['amp', '&'],
-      ['apos', '\''],
-      ['#x27', '\''],
-      ['#x2F', '/'],
-      ['#39', '\''],
-      ['#47', '/'],
-      ['lt', '<'],
-      ['gt', '>'],
-      ['nbsp', ' '],
-      ['quot', '"'],
-    ];
+function decodeHTMLEntities(text) {
+  var entities = [
+    ['amp', '&'],
+    ['apos', '\''],
+    ['#x27', '\''],
+    ['#x2F', '/'],
+    ['#39', '\''],
+    ['#47', '/'],
+    ['lt', '<'],
+    ['gt', '>'],
+    ['nbsp', ' '],
+    ['quot', '"'],
+  ];
 
-    for (var i = 0, max = entities.length; i < max; ++i) {
-      text = text.replace(new RegExp('&'+entities[i][0]+';', 'g'), entities[i][1]);
-    }
-
-    return text;
+  for (var i = 0, max = entities.length; i < max; ++i) {
+    text = text.replace(new RegExp('&'+entities[i][0]+';', 'g'), entities[i][1]);
   }
 
-  const morechildren = data.element.parentElement.parentElement.parentElement;
-  data.element.style.color = "red";
-  const u = data.element.id.slice(5, 100);
-  var url = "https://old.reddit.com/api/morechildren";
-  var data = {"link_id": data.linkId, "sort": data.sort, "children": data.children, "id": u, "limit_children": data.limitChildren};
-  chrome.runtime.sendMessage({id: "moreChildren", url: url, data: data}, function(response) {
-    const children = JSON.parse(response.response).jquery[10][3][0];
-    const eroot = morechildren.parentElement;
-    morechildren.remove();
-    const parser = new DOMParser();
-    children.forEach((c) => {
-      const site_table = document.createElement("div");
-      site_table.class = "sitetable listing";
-      const content = decodeHTMLEntities(c.data.content);
-      site_table.id = "siteTable_" + c.data.id;
-      const htmlDoc = parser.parseFromString(content, "text/html");
-      // Append the new comment to the sitetable of its parent comment:
-      document.getElementById("siteTable_" + c.data.parent).appendChild(htmlDoc.getElementsByTagName('div')[0]);
-      // Append a sitetable to the newly added comment so that further comments can be appended:
-      document.querySelector(`.report-${c.data.id}`).parentElement.parentElement.querySelector(".child").appendChild(site_table);
-    });
-
-    // Fix content for display by removing unwanted elements and changing the domain of the links from YouTube to Reddit:
-    const removables = eroot.querySelectorAll(".flat-list.buttons, .numchildren, .parent, .userattrs");
-    Array.prototype.forEach.call(removables, e => e.remove());
-    const links = eroot.querySelectorAll("a:not(.author)");
-    Array.prototype.forEach.call(links, function(a) {
-      const href = a.getAttribute("href");
-      if (href === "#s" || href === "/s") {
-        a.href = "javascript:void(0)";
-        a.className += " reddit_spoiler";
-      } else if (href[0] === "/") {
-        a.href = "https://www.reddit.com" + href;
-      }
-    });
-  $("#reddit_comments .morecomments").find("a").each(function() {
-    $(this).attr({clickArgs: $(this).attr("onclick")}).removeAttr("onclick");
-  });
-  });
-  
+  return text;
 }
+
 
 function append_extension($thread_select, $header, $comments, time) {
   // If extension not already appended, append it:
@@ -379,26 +425,21 @@ function append_extension($thread_select, $header, $comments, time) {
   $("#reddit_comments > #title").empty().append($header);
   $("#reddit_comments > #comments").empty().append($comments);
 
-  // Go through and update the links on the page to the proper base
-  // For example, there might be a link '/r/askreddit' that if we left alone would go to 'www.youtube.com/r/askreddit'
-  // So if a link starts with a forward slash we need to replace it with www.reddit.com/
-  $("#reddit_comments > #comments, #reddit_comments > #title").find("a:not(.author)").each(function() {
-    const href = this.getAttribute("href");
-    if (href === "#s" || href === "/s") {
-      $(this).attr("href", "javascript:void(0)");
-      $(this).addClass("reddit_spoiler");
-    } else if (href[0] === "/") {
-      $(this).attr("href", "https://www.reddit.com" + href);
-    }
+  $("#reddit_comments").find("button[type='submit']").attr("type", "button");
+
+  $("#reddit_comments").on("click", "a[data-event-action='delete']", function() {
+    $(this).closest("form").find(".error").show();
+    $(this).hide();
   });
 
-
-  $("#reddit_comments > #comments, #reddit_comments > #title").find("a.author").each(function() {
-    $(this).attr("href", $(this).attr("href").replace("old.reddit.com", "www.reddit.com"));
+  $("#reddit_comments").on("click", ".del-button a.no", function() {
+    $(this).closest("form").find(".option.main, a[data-event-action='delete']").show();
+    $(this).parent().hide();
   });
 
-  $("#reddit_comments .morecomments").find("a").each(function() {
-    $(this).attr({clickArgs: $(this).attr("onclick")}).removeAttr("onclick");
+  $("#reddit_comments").on("click", ".usertext-edit button.cancel", function() {
+    $(this).closest(".comment.thing").children(".entry").find(".usertext-body").show();
+    $(this).closest(".comment.thing").children(".entry").find(".usertext-edit, .usertext-buttons button").hide();
   });
 
   if ($("#reddit_comments > #nav > select").length) {

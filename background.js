@@ -30,24 +30,13 @@ chrome.runtime.onMessage.addListener(
           method: "POST",
           data: request.data,
           dataType: "json",
-          url: request.url,
+          url: "https://old.reddit.com/api/morechildren",
           async: false,
           xhrFields: {
             withCredentials: true
           }
         });
-        sendResponse({response: page.responseText});
-        break;
-
-      case "checkNSFW":
-        var page = $.ajax({
-          url: "https://old.reddit.com/r/announcements/comments/aep20/about_the_little_red_nsfw_that_appears_next_to/",
-          async: false,
-          xhrFields: {
-            withCredentials: true
-          }
-        });
-        sendResponse({response: page.responseText});
+        sendResponse({response: page.responseJSON});
         break;
 
       case "getMe":
@@ -71,6 +60,49 @@ chrome.runtime.onMessage.addListener(
             withCredentials: true
           }
         });
+        break;
+
+      case "comment":
+        var page = $.ajax({
+          method: "POST",
+          data: request.data,
+          url: "https://old.reddit.com/api/comment",
+          async: false,
+          xhrFields: {
+            withCredentials: true
+          }
+        });
+        sendResponse({response: page.responseJSON});
+        break;
+
+      case "edit":
+        var page = $.ajax({
+          method: "POST",
+          data: request.data,
+          url: "https://old.reddit.com/api/editusertext",
+          async: false,
+          xhrFields: {
+            withCredentials: true
+          }
+        });
+        sendResponse({response: page.responseJSON});
+        break;
+
+      case "delete":
+        var page = $.ajax({
+          method: "POST",
+          data: request.data,
+          url: "https://old.reddit.com/api/del",
+          async: false,
+          xhrFields: {
+            withCredentials: true
+          }
+        });
+        sendResponse({response: page.responseJSON});
+        break;
+
+      case "test":
+        sendResponse({response: "text"});
         break;
     }
     return true;
