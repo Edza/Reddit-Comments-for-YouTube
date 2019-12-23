@@ -17,7 +17,7 @@ Another consideration is that the Reddit API only allows for a maximum of 100 re
 
 #### Displaying
 
-After all the threads are retrieved and sorted by either score, comments, or subreddit, the top thread is rendered. This occurs by requesting the the top thread's page from old.reddit.com, and doing some filtering and formatting to the content to make it work inside of the YouTube page. Links are corrected and most interactive content (besides the ability to collapse/expand comments) is stripped away, making the final display mostly read-only. There is no ability to reply, save, etc. Basically, the extension acts as if the user isn't logged in to Reddit. This is an intensional choice to keep the design of the embed as clean and simple as possible. The ability to upvote/downvote comments may be added in the future, but aside from that the goal is simplicity.
+After all the threads are retrieved and sorted by either score, comments, or subreddit, the top thread is rendered. This occurs by requesting the the top thread's page from old.reddit.com, and doing some filtering and formatting to the content to make it work inside of the YouTube page.
 
 #### TODO
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Reddit Comments for YouTube",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "permissions": ["*://www.youtube.com/", "https://old.reddit.com/", "storage"],
   "content_scripts": [{
     "matches": ["https://www.youtube.com/*"],

@@ -100,10 +100,6 @@ chrome.runtime.onMessage.addListener(
         });
         sendResponse({response: page.responseJSON});
         break;
-
-      case "test":
-        sendResponse({response: "text"});
-        break;
     }
     return true;
   }
