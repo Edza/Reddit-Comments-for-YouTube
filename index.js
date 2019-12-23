@@ -401,7 +401,7 @@ function append_extension($thread_select, $header, $comments, time) {
   // If extension not already appended, append it:
   if (!$("#reddit_comments").length) {
     $("#loading_roy").remove();
-    $("#comments").before("<div id='reddit_comments'></div>");
+    $("#comments, #watch-discussion").before("<div id='reddit_comments'></div>");
     $("#reddit_comments").append("<div id='top_bar'></div>");
     $("#reddit_comments").append("<div id='nav'></div>");
     $("#reddit_comments").append("<div id='title'></div>");
@@ -515,11 +515,11 @@ window.addEventListener("scroll", function(e) {
     if ($("#reddit_comments").length) {
       // If so, empty out its contents so we can insert new content
       $("#reddit_comments").remove();
-	  $("#comments").before("<h2 id='loading_roy'>Loading Reddit Comments...</h2>");
+	  $("#comments, #watch-discussion").before("<h2 id='loading_roy'>Loading Reddit Comments...</h2>");
     } else {
       if (!$("#loading_roy").length) {
         // If extension not loaded yet, and loading text hasn't already been added, add it
-        $("#comments").before("<h2 id='loading_roy'>Loading Reddit Comments...</h2>");
+        $("#comments, #watch-discussion").before("<h2 id='loading_roy'>Loading Reddit Comments...</h2>");
       }
     }
     load_extension();
