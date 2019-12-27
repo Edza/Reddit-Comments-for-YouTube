@@ -491,8 +491,8 @@ function append_extension($thread_select, $header, $comments, time) {
 
   if ($("#reddit_comments > #nav > select").length) {
     const subreddit = $("#reddit_comments > #nav > select").find(":selected")[0].innerHTML.split(",")[0];
-    const sub_link = `<a class="author" href="${'https://www.reddit.com/' + subreddit}">${subreddit}</a>`;
-    $("#reddit_comments > #title > .tagline").append(" to " + sub_link);
+    const sub_link = `<a class="subreddit" href="${'https://www.reddit.com/' + subreddit}">${subreddit}</a>`;
+    $("#reddit_comments .top-matter .tagline .awardings-bar").before(" to " + sub_link);
   }
 
   if (time) {
