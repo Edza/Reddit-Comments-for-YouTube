@@ -602,6 +602,16 @@ content: "show child comments";
   display: none;
 }
 
+.top-matter .tagline {
+  padding-left: calc(6.1ex + 7px)
+}
+
+.top-matter a.title {
+  word-wrap: break-word;
+  width: calc(100% - 6.1ex);
+  display: inline-block;
+}
+
 /* old design */
 
 #body #reddit_comments, #body #loading_roy {
