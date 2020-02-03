@@ -3,6 +3,14 @@ var suspended = false;
 
 $(document).click(function(){$(".drop-choices").hide()});
 
+$(function ctrlEnterListener(){
+  $(document).on("keydown", ".usertext-edit textarea", function (event) {
+    if ((event.keyCode == 10 || event.keyCode == 13) && (event.ctrlKey || event.metaKey)) {
+      $(this).closest("form").find("button.save").click();
+    }
+  });
+});
+
 $(function changeSort(){
   $(document).on("click", ".dropdown.lightdrop", function(event) {
     $(this).siblings(".drop-choices").toggle();
