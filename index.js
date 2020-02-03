@@ -506,6 +506,8 @@ function append_extension($thread_select, $header, $comments, time) {
     $("div#title > p.title").append(`<a class="title titleTime" href="${window.location.href + '&t=' + time}">[${time}]</title>`);
   }
 
+  collapseHelper();
+
   chrome.storage.sync.get({collapseOnLoad: "false"}, function(result) {
     if (result.collapseOnLoad == "true") {
       toggle_expand(document.getElementById("expand"));
@@ -513,8 +515,6 @@ function append_extension($thread_select, $header, $comments, time) {
     $("#loading_roy").remove();
     $("#reddit_comments").show();
   });
-
-  collapseHelper();
 }
 
 // YouTube doesn't reload pages in a normal manner when you click on a new video,
