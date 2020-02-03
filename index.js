@@ -408,8 +408,7 @@ function decodeHTMLEntities(text) {
 function append_extension($thread_select, $header, $comments, time) {
   // If extension not already appended, append it:
   if (!$("#reddit_comments").length) {
-    $("#loading_roy").remove();
-    $("#comments, #watch-discussion").before("<div id='reddit_comments'></div>");
+    $("#comments, #watch-discussion").before("<div id='reddit_comments' style='display: none'></div>");
     $("#reddit_comments").append("<div id='top_bar'></div>");
     $("#reddit_comments").append("<div id='nav'></div>");
     $("#reddit_comments").append("<div id='title'></div>");
@@ -507,6 +506,14 @@ function append_extension($thread_select, $header, $comments, time) {
     $("div#title > p.title").append(`<a class="title titleTime" href="${window.location.href + '&t=' + time}">[${time}]</title>`);
   }
 
+  chrome.storage.sync.get({collapseOnLoad: "false"}, function(result) {
+    if (result.collapseOnLoad == "true") {
+      toggle_expand(document.getElementById("expand"));
+    };
+    $("#loading_roy").remove();
+    $("#reddit_comments").show();
+  });
+
   collapseHelper();
 }
 
@@ -528,6 +535,7 @@ window.addEventListener("scroll", function(e) {
       if (!$("#loading_roy").length) {
         // If extension not loaded yet, and loading text hasn't already been added, add it
         $("#comments, #watch-discussion").before("<h2 id='loading_roy'>Loading Reddit Comments...</h2>");
+        
       }
     }
     load_extension();

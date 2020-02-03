@@ -17,6 +17,23 @@ $(function updateCollapse(){
     });
 })
 
+$(function updateCollapseOnLoad(){
+    chrome.storage.sync.get({collapseOnLoad: "false"}, function(result) {
+        if (result.collapseOnLoad == "true") {
+          $("#rememberToggleOption:checkbox").prop('checked', true);
+        };
+      });
+    $('#rememberToggleOption:checkbox').change(
+        function(){
+            if ($(this).is(':checked')) {
+                chrome.storage.sync.set({collapseOnLoad: "true"});
+            }
+            else {
+                chrome.storage.sync.set({collapseOnLoad: "false"});
+            }
+    });
+})
+
 $(function removeFromBlacklist() {
     $(document).on("click", ".remove", function() {
         $parent = $(this).parent();
