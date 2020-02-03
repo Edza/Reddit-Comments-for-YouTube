@@ -365,9 +365,9 @@ function click_thing(e) {
 
 // This function handles the clicking of the expand button so a user can hide the Reddit extension
 function toggle_expand(elem) {
-  document.querySelector("#reddit_comments > #nav").classList.toggle("reddit_hidden");
-  document.querySelector("#reddit_comments > #title").classList.toggle("reddit_hidden");
-  document.querySelector("#reddit_comments > #comments").classList.toggle("reddit_hidden");
+  $("#reddit_comments > #nav").toggleClass("reddit_hidden");
+  $("#reddit_comments > #title").toggleClass("reddit_hidden");
+  $("#reddit_comments > #comments").toggleClass("reddit_hidden");
 
   if (elem.innerHTML[1] === "-") {
     elem.innerHTML = "[+]";
