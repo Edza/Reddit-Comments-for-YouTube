@@ -7,8 +7,11 @@
 <html lang="en">
     <body>
     <h2>Settings</h2>
-    <div id="rememberToggle"><input type="checkbox" id="rememberToggleOption">Collapse comments by default.<br></div>
-    <div id="collapser"><input type="checkbox" id="collapseOption">Auto-hide children for top-level comments.<br></div>
+    <div id="checkboxOptions">
+        <label><input type="checkbox" id="rememberToggleOption">Collapse comments by default.</label>
+        <label><input type="checkbox" id="collapseOption">Auto-hide children for top-level comments.</label>
+    </div>
+
     <h3>Blacklist subreddits:</h3>
     <div id="input"><input type="text" id="blacklistInput"><button id="blacklistButton">Add</button><button id="clearButton">Clear</button></div>
     <p id="inputError">Invalid input! Letters, numbers, and underscores only.</p>
