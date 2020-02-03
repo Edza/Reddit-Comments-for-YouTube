@@ -200,12 +200,13 @@ function get_threads(v, callback) {
     'http://m.youtube.com/watch?v=',
     'https://youtu.be/',
     'http://youtu.be/',
-	  'https://invidio.us/'
+    'https://invidio.us/',
+    'http://invidio.us/'
   ].map(url => `${baseUrl}${url}${v}`);
 
-  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}&feature`)
-  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}&t`)
-  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}&ab_channel`)
+  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}%26feature`)
+  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}%26t`)
+  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}%26ab_channel`)
 
   chrome.runtime.sendMessage({id: "getThreads", urls: requests}, function(response) {
     setup_threads(response.response)
