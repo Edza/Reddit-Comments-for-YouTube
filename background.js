@@ -1,5 +1,5 @@
 chrome.runtime.onMessage.addListener(
-  function(request, sender, sendResponse) {
+  function (request, sender, sendResponse) {
     switch(request.id) {
       case "setupComments":
         var page = $.ajax({
@@ -12,16 +12,22 @@ chrome.runtime.onMessage.addListener(
         sendResponse({response: page.responseText.replace(/<\s*head[^>]*>.*?<\s*\/\s*head>/g, '')});
         break;
 
-      case "getThreads": 
-        $.when(...request.urls.map(url => $.ajax({
-          url: url,
-          timeout: 10000
-        }))).then(function(...args) {
+      case "getThreads":
+        $.when(...request.urls.map(url => getThread(url).catch(function(error) {
+          console.error(`Failed to fetch ${url}: ${error}`)
+        })
+        )).then(function(...args) {
           const threads = [];
-          args.forEach(function(r) {
-            if (r[2].status == 200) r[0].data.children.forEach(t => threads.push(t));
-          });
-          sendResponse({response: threads})
+          if (args.every(element => element == null)) {
+            sendResponse({response: false})
+          } else {
+            args.forEach(function(r) {
+              if (r != null) {
+                r.forEach(t => threads.push(t));
+              }
+            });
+            sendResponse({response: threads})
+          }
         });
         break; 
 
@@ -104,3 +110,29 @@ chrome.runtime.onMessage.addListener(
     return true;
   }
 );
+
+async function getThread(url) {
+  return new Promise ((resolve, reject) => {
+    const threads = [];
+    $.ajax({
+      url: url,
+      xhrFields: {
+        withCredentials: true
+      }
+    }).done(async function(response) {
+      response.data.children.forEach(t => threads.push(t));
+      if (response.data.after != null) {
+        trimmedUrl = url.replace(/&after.*$/g, "");
+        await getThread(`${trimmedUrl}&after=${response.data.after}`).then(value => {
+          moreThreads = value;
+          threads.push(...value);
+        }, error => {
+          console.error(`Failed to fetch ${url}: ${error}`);
+        })
+      }
+      resolve(threads);
+    }).fail(function(response, status, error) {
+      reject(status);
+    })
+  })
+}

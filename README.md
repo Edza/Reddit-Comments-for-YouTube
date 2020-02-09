@@ -15,26 +15,14 @@ Supports:
 
 #### Querying
 
-In order to retrieve as many results as possible, multiple requests must be sent to the Reddit API. This is because there are multiple ways to link to the same video. Depending on how the video was shared, the URL could contain one of many domains (youtube.com, youtu.be, m.youtube.com, invidio.us), as well as timestamps and other arguments, so a lot of variations must be accounted for. A URL could also be linked either via HTTP or HTTPS. Even though the 8 following URLs all point to the same video, they are all different and Reddit's internal search functions will treat them as such, meaning they each require their own request:
+In order to retrieve as many results as possible, multiple requests must be sent to the Reddit API. This is because there are multiple ways to link to the same video. Depending on how the video was shared, the URL could contain one of many domains (youtube.com, youtu.be, m.youtube.com, invidio.us), so these all must be accounted for. Even though the 8 following URLs all point to the same video, they are all different and Reddit's internal search functions will treat them as such, meaning they each require their own request:
 
 - https://www.youtube.com/watch?v=dQw4w9WgXcQ
-- http://www.youtube.com/watch?v=dQw4w9WgXcQ
 - https://youtu.be/dQw4w9WgXcQ
-- http://youtu.be/dQw4w9WgXcQ
 - https://m.youtube.com/watch?v=dQw4w9WgXcQ
-- http://m.youtube.com/watch?v=dQw4w9WgXcQ
 - https://invidio.us/watch?v=dQw4w9WgXcQ
-- http://invidio.us/watch?v=dQw4w9WgXcQ
 
-Another consideration is that the Reddit API only allows for a maximum of 100 results per request, so we have a theoretical maximum of 800 results with our 8 requests (although it's unlikely that m.youtube.com and invidio.us, as well as all of the HTTP requests, will ever come close to their limits). This isn't an issue for the majority of videos, but, for widely shared videos (like dQw4w9WgXcQ), there will be threads cut off. Unfortunately, the `/api/info` endpoint we are using for requesting threads doesn't support the `after` argument, so there isn't any way to get past the first 100 arbitrarily selected threads.
-
-Additionally, more requests are made to the `/api/search` endpoint with queries such as:
-
-- dQw4w9WgXcQ%26t=5
-- dQw4w9WgXcQ%26feature=youtu.be
-- dQw4w9WgXcQ%26ab_channel=RickAstleyVEVO
-
-These are done to find videos that were submitted with timestamps and other arguments. `/api/search` is used instead of `/api/info` because `/api/info` only accepts exact URLs, and it's not worth tripling the number of requests for what would usually account for a sub-100 number of results across domains.
+The `/api/search` endpoint is used to make these requests. Each request will retrieve up to 100 results, and if additional pages are provided with an `after` response, those will be queried as well. Reddit provides a maximum of 10 pages per query, meaning up to 1000 results can be retrieved for each domain.
 
 #### Displaying
 

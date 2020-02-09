@@ -3,6 +3,8 @@ var suspended = false;
 
 $(document).click(function(){$(".drop-choices").hide()});
 
+jQuery(document.links)   .filter(function() {     return this.hostname != window.location.hostname;   })     .attr('target', '_blank');
+
 $(function ctrlEnterListener(){
   $(document).on("keydown", ".usertext-edit textarea", function (event) {
     if ((event.keyCode == 10 || event.keyCode == 13) && (event.ctrlKey || event.metaKey)) {
@@ -160,10 +162,10 @@ function collapseHelper() {
 function display_error_message() {
   if (!navigator.onLine) {
     append_extension(false, "<h3 id='nothread'>Internet connection error. Please check your connection and reload the page.</h3>", "");
-    $("#reddit_comments > #nav").attr("display", "none");
+    $("#reddit_comments > #nav").remove();
   } else {
     append_extension(false, "<h3 id='nothread'>Unknown error loading Reddit content. It is possible that Reddit is down or something in the extension went wrong.</h3>", "");
-    $("#reddit_comments > #nav").attr("display", "none");
+    $("#reddit_comments > #nav").remove();
   }
 }
 
@@ -192,29 +194,26 @@ function sort_threads(threads) {
 }
 
 function get_threads(v, callback) {
-  const baseUrl = 'https://old.reddit.com/api/info.json?limit=100&url=';
   const requests = [
-    'https://www.youtube.com/watch?v=',
-    'http://www.youtube.com/watch?v=',
-    'https://m.youtube.com/watch?v=',
-    'http://m.youtube.com/watch?v=',
-    'https://youtu.be/',
-    'http://youtu.be/',
-    'https://invidio.us/',
-    'http://invidio.us/'
-  ].map(url => `${baseUrl}${url}${v}`);
-
-  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}%26feature`)
-  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}%26t`)
-  requests.push(`https://old.reddit.com/search.json?limit=100&q=url:${v}%26ab_channel`)
-
-  chrome.runtime.sendMessage({id: "getThreads", urls: requests}, function(response) {
-    setup_threads(response.response)
-  });
+    'www.youtube.com',
+    'm.youtube.com',
+    'youtu.be',
+    'invidio.us'
+  ].map(domain => `https://old.reddit.com/search.json?limit=100&sort=top&q=url:${v}+site:${domain}`);
+  const threads = [];
+  chrome.runtime.sendMessage({
+      id: "getThreads",
+      urls: requests
+    }, function(response) {
+      if (response.response) {
+        setup_threads(response.response);
+      }
+      else (display_error_message());
+    })
 }
 
 function setup_threads(threads) {
-  var filtered = threads.filter(t => !t.data.promoted).filter(t => (t.data.domain == "youtube.com" || t.data.domain == "youtu.be" || t.data.domain == "m.youtube.com" || t.data.domain == "invidio.us"));
+  var filtered = threads.filter(t => !t.data.promoted);
   chrome.storage.sync.get({subBlacklist: []}, function(result) {
     filtered = filtered.filter(t => !result.subBlacklist.includes(t.data.subreddit.toLowerCase()));
   });
@@ -222,9 +221,6 @@ function setup_threads(threads) {
     modhash = meResponse.response.data.modhash;
     if (meResponse.response.data.is_suspended) {
       suspended = meResponse.response.data.is_suspended;
-    }
-    if (typeof meResponse.response.data.over_18 == "undefined" || !meResponse.response.data.over_18) {
-      filtered = filtered.filter(t => !t.data.over_18);
     }
     if (filtered.length) {
       let sorted_threads = sort_threads(filtered);
