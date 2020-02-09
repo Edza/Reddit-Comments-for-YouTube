@@ -328,6 +328,8 @@ function clean_reddit_content($content) {
   $content.find("a.author, a[data-event-action='permalink']").each(function() {
     $(this).attr("href", $(this).attr("href").replace("old.reddit.com", "www.reddit.com"));
   });
+  $content.find("a:not([href^='javascript'])").attr('target', '_blank');  
+
   if (suspended || modhash == null) {
     $content.find(".commentarea > .usertext, .reply-button").remove();
     $content.find(".arrow").css("visibility", "hidden");
