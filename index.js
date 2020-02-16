@@ -3,8 +3,6 @@ var suspended = false;
 
 $(document).click(function(){$(".drop-choices").hide()});
 
-jQuery(document.links)   .filter(function() {     return this.hostname != window.location.hostname;   })     .attr('target', '_blank');
-
 $(function ctrlEnterListener(){
   $(document).on("keydown", ".usertext-edit textarea", function (event) {
     if ((event.keyCode == 10 || event.keyCode == 13) && (event.ctrlKey || event.metaKey)) {
@@ -129,7 +127,7 @@ $(function vote(){
     if ($(this).hasClass("up")) {
       direction = 1;
       $(this).removeClass("up").addClass("upmod");
-      $(this).parent().find(".downmod").removeClass("down").addClass("down");
+      $(this).parent().find(".downmod").removeClass("downmod").addClass("down");
       $parent.children(".unvoted").removeClass("unvoted").addClass("likes");
       $parent.children(".dislikes").removeClass("dislikes").addClass("likes");
     } else if ($(this).hasClass("down")) {
