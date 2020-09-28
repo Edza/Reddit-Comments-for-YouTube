@@ -260,7 +260,7 @@ function setup_threads(threads) {
     if (meResponse.response.data.is_suspended) {
       suspended = meResponse.response.data.is_suspended;
     }
-    if (filtered.length) {
+    if (filtered.length > 0) {
       let sorted_threads = sort_threads(filtered);
   
       // Filter duplicates:
@@ -348,7 +348,8 @@ function setup_threads(threads) {
           redditComments.removeChild(redditComments.lastChild);
         }
       }
-      document.querySelector("#comments, #watch-discussion").insertAdjacentHTML("beforeend", "<div id='reddit_comments'><h3 id='nothread'>No Threads Found</h3></div>")
+      append_extension(false, "<h3 id='nothread'>No Threads Found</h3>", "");
+      document.getElementById("nav").style.display = "none";
     }
   });
 }
@@ -623,7 +624,10 @@ function append_extension(thread_select, header, comments, time) {
     redditComments.querySelector("div#title p.title").insertAdjacentHTML("beforeend", `<span> -- </span> <a class="title titleTime" href="javascript:(0)" onclick="document.getElementsByClassName('video-stream')[0].currentTime = ${time}">[${timestamp}]</title>`);
   }
 
-  redditComments.querySelector("#thread_count").textContent = `${redditComments.querySelector("#thread_select").length} ${redditComments.querySelector("#thread_select").length == 1 ? "Thread" : "Threads"}`;
+  let threadSelect = redditComments.querySelector("#thread_select");
+  if (threadSelect) {
+    redditComments.querySelector("#thread_count").textContent = `${threadSelect.length} ${threadSelect.length == 1 ? "Thread" : "Threads"}`;
+  }
 
   collapseHelper();
 
@@ -634,6 +638,18 @@ function append_extension(thread_select, header, comments, time) {
     document.querySelector("#loading_roy").remove();
     redditComments.style.display = "block";
   });
+}
+
+function waitForComments() {
+  return new Promise((resolve, reject) => {
+    const intervalId = setInterval(() => {
+      if (document.querySelector("#comments, #watch-discussion")) {
+        clearInterval(intervalId);
+        resolve();
+      }
+    }, 200);
+  });
+
 }
 
 function update(e) {
@@ -659,6 +675,6 @@ function update(e) {
   }
 };
 
-document.addEventListener("DOMContentLoaded", (e) => update(e));
-document.addEventListener("yt-navigate-finish", (e) => update(e));
-document.addEventListener("spfdone", (e) => update(e));
+document.addEventListener("DOMContentLoaded", (e) => waitForComments().then(update(e)));
+document.addEventListener("yt-navigate-finish", (e) => waitForComments().then(update(e)));
+document.addEventListener("spfdone", (e) => waitForComments().then(update(e)));

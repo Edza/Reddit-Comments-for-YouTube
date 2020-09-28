@@ -25,7 +25,8 @@ chrome.runtime.onMessage.addListener(
             });
             sendResponse({response: threads})
           }
-        });
+        })
+        .catch(sendResponse({response: null}));
         break; 
 
       case "moreChildren":
