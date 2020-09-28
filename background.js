@@ -11,23 +11,19 @@ chrome.runtime.onMessage.addListener(
         fetch("https://old.reddit.com" + request.permalink + request.sort).then(response => response.text()).then(text => sendResponse({response: text.replace(/<\s*head[^>]*>.*?<\s*\/\s*head>/g, '')}));
         break;
 
-      case "getThreads":
-        Promise.all(request.urls.map(url => getThread(url)
-        )).then(args => {
-          const threads = [];
-          if (args.every(element => element == null)) {
-            sendResponse({response: false})
-          } else {
-            args.forEach(function(r) {
-              if (r != null) {
-                r.forEach(t => threads.push(t));
+        case "getThreads":
+          Promise.all(request.urls.map(url => getThread(url)))
+          .then(promises => {
+            const threads = [];
+            promises.forEach(response => {
+              if (response != null) {
+                response.forEach(thread => threads.push(thread));
               }
             });
             sendResponse({response: threads})
-          }
-        })
-        .catch(sendResponse({response: null}));
-        break; 
+          })
+          .catch(() => sendResponse({response: null}));
+          break; 
 
       case "moreChildren":
         fetch("https://old.reddit.com/api/morechildren", {
