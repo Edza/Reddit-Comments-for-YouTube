@@ -15,12 +15,11 @@ Supports:
 
 #### Querying
 
-In order to retrieve as many results as possible, multiple requests must be sent to the Reddit API. This is because there are multiple ways to link to the same video. Depending on how the video was shared, the URL could contain one of many domains (youtube.com, youtu.be, m.youtube.com, invidio.us), so these all must be accounted for. Even though the 8 following URLs all point to the same video, they are all different and Reddit's internal search functions will treat them as such, meaning they each require their own request:
+In order to retrieve as many results as possible, multiple requests must be sent to the Reddit API. This is because there are multiple ways to link to the same video. Depending on how the video was shared, the URL could contain one of many domains (youtube.com, youtu.be, m.youtube.com), so these all must be accounted for. Even though the 8 following URLs all point to the same video, they are all different and Reddit's internal search functions will treat them as such, meaning they each require their own request:
 
 - https://www.youtube.com/watch?v=dQw4w9WgXcQ
 - https://youtu.be/dQw4w9WgXcQ
 - https://m.youtube.com/watch?v=dQw4w9WgXcQ
-- https://invidio.us/watch?v=dQw4w9WgXcQ
 
 The `/api/search` endpoint is used to make these requests. Each request will retrieve up to 100 results, and if additional pages are provided with an `after` response, those will be queried as well. Reddit provides a maximum of 10 pages per query, meaning up to 1000 results can be retrieved for each domain.
 

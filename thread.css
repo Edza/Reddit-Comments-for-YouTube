@@ -141,9 +141,10 @@ word-wrap: break-word;
 margin-left: 5px;
 }
 
-#reddit_comments > #title .title > a {
+#reddit_comments > #title p.title > * {
 text-decoration: none;
 font-size: 1.7em;
+display: inline;
 }
 
 #reddit_comments > #title .tagline {
@@ -201,7 +202,7 @@ width: 100%;
 text-align: center;
 }
 
-#expand, .expand {
+#reddit_expander, .expand {
 color: #369;
 text-decoration: none;
 font-family: "Lucida Console", Monaco, monospace;
@@ -334,8 +335,9 @@ margin-top: 3px !important;
 -webkit-margin-after: 0em !important;
 }
 
-.titleTime {
+.p.title > span {
 margin-left: 10px;
+margin-right: 10px;
 }
 
 #mySortSelect {
