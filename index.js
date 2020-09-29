@@ -641,15 +641,16 @@ function append_extension(thread_select, header, comments, time) {
 }
 
 function waitForComments() {
-  return new Promise((resolve, reject) => {
-    const intervalId = setInterval(() => {
-      if (document.querySelector("#comments, #watch-discussion")) {
-        clearInterval(intervalId);
-        resolve();
-      }
-    }, 200);
-  });
-
+  if (window.location.href !== url && window.location.href.match(/v=/)) {
+    new Promise((resolve, reject) => {
+      const intervalId = setInterval(() => {
+        if (document.querySelector("#comments, #watch-discussion")) {
+          clearInterval(intervalId);
+          resolve();
+        }
+      }, 200);
+    }).then(update(e));
+  }
 }
 
 function update(e) {
@@ -675,6 +676,6 @@ function update(e) {
   }
 };
 
-document.addEventListener("DOMContentLoaded", (e) => waitForComments().then(update(e)));
-document.addEventListener("yt-navigate-finish", (e) => waitForComments().then(update(e)));
-document.addEventListener("spfdone", (e) => waitForComments().then(update(e)));
+document.addEventListener("DOMContentLoaded", (e) => waitForComments());
+document.addEventListener("yt-navigate-finish", (e) => waitForComments());
+document.addEventListener("spfdone", (e) => waitForComments());
