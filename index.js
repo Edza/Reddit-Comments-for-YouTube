@@ -349,7 +349,7 @@ function setup_threads(threads) {
         }
       }
       append_extension(false, "<h3 id='nothread'>No Threads Found</h3>", "");
-      document.getElementById("nav").style.display = "none";
+      document.querySelector("#reddit_comments #nav").style.display = "none";
     }
   });
 }
@@ -642,18 +642,19 @@ function append_extension(thread_select, header, comments, time) {
 
 function waitForComments() {
   if (window.location.href !== url && window.location.href.match(/v=/)) {
-    new Promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
       const intervalId = setInterval(() => {
         if (document.querySelector("#comments, #watch-discussion")) {
           clearInterval(intervalId);
           resolve();
         }
       }, 200);
-    }).then(update(e));
+    });
+    promise.then(update());
   }
 }
 
-function update(e) {
+function update() {
   if (window.location.href !== url && window.location.href.match(/v=/)) {
     url = window.location.href;
     // Test the root element of the extension, #reddit_comments, to see if extension has already been appended
@@ -679,3 +680,6 @@ function update(e) {
 document.addEventListener("DOMContentLoaded", (e) => waitForComments());
 document.addEventListener("yt-navigate-finish", (e) => waitForComments());
 document.addEventListener("spfdone", (e) => waitForComments());
+if(document.readyState !== "loading") {
+	waitForComments();
+}
