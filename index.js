@@ -635,7 +635,9 @@ function append_extension(thread_select, header, comments, time) {
     if (result.collapseOnLoad == "true") {
       toggle_expand();
     };
-    document.querySelector("#loading_roy").remove();
+    if (loading = document.getElementById("loading_roy")) {
+      loading.remove();
+    }
     redditComments.style.display = "block";
   });
 }
@@ -656,30 +658,32 @@ function waitForComments() {
 
 function update() {
   if (window.location.href !== url && window.location.href.match(/v=/)) {
-    url = window.location.href;
-    // Test the root element of the extension, #reddit_comments, to see if extension has already been appended
-    if (document.getElementById("reddit_comments")) {
-      // If so, empty out its contents so we can insert new content
-      document.getElementById("reddit_comments").remove();
-      document.querySelector("#comments, #watch-discussion").insertAdjacentHTML("beforebegin", "<h2 id='loading_roy'>Loading Reddit Comments...</h2>");
+    let comments = document.querySelector("#comments, #watch-discussion");
+    if (comments == null) {
+      waitForComments();
     } else {
-      if (!document.getElementById("loading_roy")) {
-        // If extension not loaded yet, and loading text hasn't already been added, add it
-        let script = document.createElement("script");
-        script.innerHTML = `${click_thing.toString()}
-        ${toggle_expand.toString()}
-        ${togglecomment.toString()}`
-        document.head.append(script);
-        document.querySelector("#comments, #watch-discussion").insertAdjacentHTML("beforebegin", "<h2 id='loading_roy'>Loading Reddit Comments...</h2>");
+      url = window.location.href;
+      // Test the root element of the extension, #reddit_comments, to see if extension has already been appended
+      if (document.getElementById("reddit_comments")) {
+        // If so, empty out its contents so we can insert new content
+        document.getElementById("reddit_comments").remove();
+        comments.insertAdjacentHTML("beforebegin", "<h2 id='loading_roy'>Loading Reddit Comments...</h2>");
+      } else {
+        if (!document.getElementById("loading_roy")) {
+          // If extension not loaded yet, and loading text hasn't already been added, add it
+          let script = document.createElement("script");
+          script.innerHTML = `${click_thing.toString()}
+          ${toggle_expand.toString()}
+          ${togglecomment.toString()}`
+          document.head.append(script);
+          comments.insertAdjacentHTML("beforebegin", "<h2 id='loading_roy'>Loading Reddit Comments...</h2>");
+        }
       }
+      load_extension();
     }
-    load_extension();
   }
 };
 
 document.addEventListener("DOMContentLoaded", (e) => waitForComments());
 document.addEventListener("yt-navigate-finish", (e) => waitForComments());
 document.addEventListener("spfdone", (e) => waitForComments());
-if(document.readyState !== "loading") {
-	waitForComments();
-}
