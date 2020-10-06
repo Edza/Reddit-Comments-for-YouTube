@@ -632,7 +632,8 @@ function append_extension(thread_select, header, comments, time) {
   collapseHelper();
 
   chrome.storage.sync.get({collapseOnLoad: "false"}, function(result) {
-    if (result.collapseOnLoad == "true") {
+    if (result.collapseOnLoad == "true" && !redditComments.classList.contains("manually_toggled")) {
+      redditComments.classList.add("manually_toggled")
       toggle_expand();
     };
     if (loading = document.getElementById("loading_roy")) {
