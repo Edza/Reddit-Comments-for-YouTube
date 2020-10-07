@@ -234,8 +234,7 @@ function sort_threads(threads) {
 
 function get_threads(v) {
   const requests = [
-    'www.youtube.com',
-    'm.youtube.com',
+    'youtube.com',
     'youtu.be'
   ].map(domain => `https://old.reddit.com/search.json?limit=100&sort=top&q=url:${v}+site:${domain}`);
   const threads = [];
